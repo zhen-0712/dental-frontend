@@ -1,5 +1,6 @@
 // ===== upload.js - 上傳邏輯 =====
 const VIEWS = ['front', 'left_side', 'right_side', 'upper_occlusal', 'lower_occlusal'];
+
 export { VIEWS };
 
 export function setupUploads(prefix, filesObj, btnId) {
@@ -28,6 +29,5 @@ export function setupUploads(prefix, filesObj, btnId) {
 }
 
 export function updateBtn(btnId, filesObj) {
-  const btn = document.getElementById(btnId);
-  if (btn) btn.disabled = !VIEWS.every(v => filesObj[v]);
+  document.getElementById(btnId).disabled = !VIEWS.every(v => filesObj[v]);
 }

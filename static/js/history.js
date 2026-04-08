@@ -10,6 +10,7 @@ let currentFilter = 'week';
 let currentWeekOffset  = 0;
 let currentMonthOffset = 0;
 
+// ===== Fetch =====
 export async function fetchAnalyses() {
   const token = getToken();
   if (!token) return [];
@@ -20,6 +21,7 @@ export async function fetchAnalyses() {
   return res.json();
 }
 
+// ===== Filter =====
 function getWeekRange(offset) {
   const now = new Date();
   const day = now.getDay();
@@ -67,7 +69,8 @@ function monthLabel(offset) {
 }
 
 function getOffsets() {
-  const weeks = new Set(), months = new Set();
+  const weeks  = new Set();
+  const months = new Set();
   const now = new Date();
   allAnalyses.forEach(a => {
     const d = new Date(a.created_at);
@@ -104,17 +107,21 @@ function makeDropdown(id, items, activeVal, onSelect) {
           </div>
         `).join('')}
       </div>
-    </div>`;
+    </div>
+  `;
 }
 
 function buildFilterUI() {
   const wrap = document.getElementById('history-filter-wrap') || document.querySelector('.history-filter');
   if (!wrap) return;
+
   const { weekOffsets, monthOffsets } = getOffsets();
   const weekItems  = weekOffsets.map(o => ({ val: o, label: weekLabel(o) }));
   const monthItems = monthOffsets.map(o => ({ val: o, label: monthLabel(o) }));
+
   const showWeekDD  = currentFilter === 'week'  && weekItems.length  > 0;
   const showMonthDD = currentFilter === 'month' && monthItems.length > 0;
+
   wrap.innerHTML = `
     <div class="history-filter-ui">
       ${showWeekDD  ? makeDropdown('hf-week-dd',  weekItems,  currentWeekOffset,  'onWeekSelect')  : ''}
@@ -124,7 +131,9 @@ function buildFilterUI() {
         <button class="history-filter-btn ${currentFilter==='month'?'active':''}" onclick="window.setHistoryFilter('month')">月</button>
         <button class="history-filter-btn ${currentFilter==='all'  ?'active':''}" onclick="window.setHistoryFilter('all')">全部</button>
       </div>
-    </div>`;
+    </div>
+  `;
+
   document.addEventListener('click', closeAllDropdowns, { once: false });
 }
 
@@ -134,7 +143,7 @@ function closeAllDropdowns(e) {
   }
 }
 
-// ===== 準確度計算 =====
+// ===== 準確度計算（history 卡片用）=====
 function calcToothAccuracySimple(t) {
   if (!t || !t.teeth) return null;
   const total = Object.keys(t.teeth).length;
@@ -154,15 +163,21 @@ function calcPlaqueAccuracySimple(s, toothAnalysis) {
   const summary = s.fdi_plaque_summary;
   const total = Object.keys(summary).length;
   if (total === 0) return null;
+
+  // 1. 投射命中率：分母用後端記錄的「SAT 偵測到 + roi_mask 有菌斑」的真實牙數
+  //    舊資料沒有 sat_plaque_fdi_count 時 fallback 到 summary 長度（維持舊行為）
   const hits = Object.values(summary).filter(v => v.hit_verts > 0).length;
   const satTotal = s.sat_plaque_fdi_count || total;
   const hitRate = hits / satTotal;
+
+  // 2. 多視角驗證：用 tooth_analysis 的 detected_in_views（不受 roi_mask 噪訊影響）
   const teethMap = (toothAnalysis && toothAnalysis.teeth) ? toothAnalysis.teeth : {};
   const cross = Object.keys(summary).filter(fdi => {
     const ti = teethMap[fdi];
     return ti && (ti.detected_in_views || []).length >= 2 && (summary[fdi].hit_verts || 0) > 0;
   }).length;
   const crossRate = cross / total;
+
   const score = hitRate * 0.60 + crossRate * 0.40;
   return { score, grade: score >= 0.80 ? 'A' : score >= 0.60 ? 'B' : score >= 0.40 ? 'C' : 'D' };
 }
@@ -182,14 +197,21 @@ function renderAccuracyMini(score, grade, label) {
       </div>
       <span class="history-acc-grade" style="color:${color};">${grade}</span>
       <span class="history-acc-pct">${pct}%</span>
-    </div>`;
+    </div>
+  `;
 }
 
+// ===== Render =====
 export async function renderHistorySection() {
   const section = document.getElementById('history-section');
   if (!section) return;
-  if (!isLoggedIn()) { section.classList.add('hidden'); return; }
+
+  if (!isLoggedIn()) {
+    section.classList.add('hidden');
+    return;
+  }
   section.classList.remove('hidden');
+
   allAnalyses = await fetchAnalyses();
   renderHistoryGrid();
 }
@@ -197,12 +219,15 @@ export async function renderHistorySection() {
 function renderHistoryGrid() {
   const grid = document.getElementById('history-grid');
   if (!grid) return;
+
   buildFilterUI();
   const filtered = filterByTime(allAnalyses);
+
   if (filtered.length === 0) {
     grid.innerHTML = `<p class="history-empty">${currentFilter === 'week' ? '本週' : currentFilter === 'month' ? '本月' : ''}尚無分析記錄</p>`;
     return;
   }
+
   grid.innerHTML = filtered.map(a => renderCard(a)).join('');
 }
 
@@ -214,14 +239,19 @@ function renderCard(a) {
   const date = new Date(a.created_at).toLocaleString('zh-TW', {
     month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
   });
-  let summaryHtml = '', detailHtml = '';
+
+  let summaryHtml = '';
+  let detailHtml  = '';
+
   if (a.status === 'done' && a.result) {
     if (a.type === 'plaque' && a.result.stats) {
       const s = a.result.stats;
       const ratio = s.plaque_ratio != null ? `${(s.plaque_ratio * 100).toFixed(1)}%` : '—';
       const teeth = Object.keys(s.fdi_plaque_summary || {}).length;
+      // tooth_analysis 是菌斑分析附帶的牙齒資料（後端存的 key）
       const toothAna = a.result?.tooth_analysis || null;
       const acc = calcPlaqueAccuracySimple(s, toothAna);
+
       summaryHtml = `
         <div class="history-summary">
           <div class="history-summary-item">
@@ -238,10 +268,12 @@ function renderCard(a) {
           </div>` : ''}
         </div>
         ${acc ? renderAccuracyMini(acc.score, acc.grade, '菌斑分析準確度') : ''}`;
+
       detailHtml = renderPlaqueDetail(a.result.stats, a.result.tooth_analysis || a.result.tooth_data || null);
     } else if (a.type === 'init' && a.result.tooth_analysis) {
       const t = a.result.tooth_analysis;
       const acc = calcToothAccuracySimple(t);
+
       summaryHtml = `
         <div class="history-summary">
           <div class="history-summary-item">
@@ -258,9 +290,11 @@ function renderCard(a) {
           </div>` : ''}
         </div>
         ${acc ? renderAccuracyMini(acc.score, acc.grade, '模型還原準確度') : ''}`;
+
       detailHtml = renderToothDetail(t);
     }
   }
+
   return `
     <div class="history-card" id="hcard-${a.id}">
       <div class="history-card-header" onclick="window.toggleHistoryCard(${a.id})">
@@ -280,7 +314,8 @@ function renderCard(a) {
       <div class="history-detail">
         ${detailHtml || '<p style="color:var(--muted);font-size:0.875rem;">無詳細資料</p>'}
       </div>
-    </div>`;
+    </div>
+  `;
 }
 
 function renderToothDetail(t) {
@@ -290,6 +325,7 @@ function renderToothDetail(t) {
     ...(t.suspicious?.low_confidence || []),
     ...(t.suspicious?.insufficient_views || []),
   ].map(Number));
+
   const makeRow = (teeth, label) => `
     <div class="history-tooth-row">
       <span class="history-tooth-label">${label}</span>
@@ -298,16 +334,19 @@ function renderToothDetail(t) {
         return `<div class="history-tooth-chip ${cls}" title="FDI ${n}">${n}</div>`;
       }).join('')}
     </div>`;
+
   const missingList = (t.never_detected || []);
   const missingHtml = missingList.length > 0
     ? `<p class="history-detail-title" style="margin-top:0.875rem;">缺牙</p>
        <div class="history-missing-list">${missingList.map(n => `<span class="missing-badge">${n}</span>`).join('')}</div>`
     : '';
+
   const suspectList = [...(t.suspicious?.insufficient_views || []), ...(t.suspicious?.low_confidence || [])];
   const suspectHtml = suspectList.length > 0
     ? `<p class="history-detail-title" style="margin-top:0.875rem;">視角不足 / 可信度低</p>
        <div class="history-missing-list">${suspectList.map(n => `<span class="suspect-badge">${n}</span>`).join('')}</div>`
     : '';
+
   const acc = calcToothAccuracySimple(t);
   const accHtml = acc ? `
     <p class="history-detail-title" style="margin-top:0.875rem;">各項指標</p>
@@ -323,15 +362,21 @@ function renderToothDetail(t) {
             <div style="height:100%;width:${(val*100).toFixed(0)}%;background:${gradeColor(acc.grade)};border-radius:99px;"></div>
           </div>
           <span style="font-size:0.7rem;color:var(--muted);text-align:right;">${(val*100).toFixed(0)}%</span>
-        </div>`).join('')}
-    </div>` : '';
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
   return `
     <p class="history-detail-title">牙齒分布</p>
     <div class="history-tooth-chart">
       ${makeRow(ALL_UPPER, '上')}
       ${makeRow(ALL_LOWER, '下')}
     </div>
-    ${missingHtml}${suspectHtml}${accHtml}`;
+    ${missingHtml}
+    ${suspectHtml}
+    ${accHtml}
+  `;
 }
 
 function renderPlaqueDetail(stats, toothData) {
@@ -339,9 +384,11 @@ function renderPlaqueDetail(stats, toothData) {
   const maxPx   = Math.max(...Object.values(summary).map(v => v.total_plaque_px), 1);
   const plaqueMap = {};
   Object.entries(summary).forEach(([fdi, info]) => { plaqueMap[Number(fdi)] = info.total_plaque_px; });
+
   const missing = new Set(
     (toothData?.never_detected || window._toothData?.never_detected || []).map(Number)
   );
+
   const makeRow = (teeth, label) => `
     <div class="history-plaque-row">
       <span class="history-tooth-label">${label}</span>
@@ -356,7 +403,11 @@ function renderPlaqueDetail(stats, toothData) {
         </div>`;
       }).join('')}
     </div>`;
-  const topTeeth = Object.entries(summary).sort((a,b) => b[1].total_plaque_px - a[1].total_plaque_px).slice(0, 5);
+
+  const topTeeth = Object.entries(summary)
+    .sort((a,b) => b[1].total_plaque_px - a[1].total_plaque_px)
+    .slice(0, 5);
+
   const topHtml = topTeeth.length > 0 ? `
     <p class="history-detail-title" style="margin-top:0.875rem;">菌斑最多的牙齒</p>
     <div style="display:flex;flex-direction:column;gap:4px;">
@@ -367,22 +418,27 @@ function renderPlaqueDetail(stats, toothData) {
             <div style="height:100%;width:${(info.total_plaque_px/maxPx*100).toFixed(0)}%;background:linear-gradient(90deg,var(--red-plaque),#e74c3c);border-radius:99px;"></div>
           </div>
           <span style="font-size:0.7rem;color:var(--muted);text-align:right;">${info.total_plaque_px}px</span>
-        </div>`).join('')}
+        </div>
+      `).join('')}
     </div>` : '';
+
+  // 準確度詳細：與 calcPlaqueAccuracySimple 保持一致的計算邏輯
   const toothAnaD = toothData || window._toothData || null;
   const acc = calcPlaqueAccuracySimple(stats, toothAnaD);
   const total = Object.keys(summary).length;
   const hits = Object.values(summary).filter(v => v.hit_verts > 0).length;
-  const teethMapD = (toothData && toothData.teeth) ? toothData.teeth : (window._toothData?.teeth || {});
+  const satTotal = stats.sat_plaque_fdi_count || total;
+  const teethMapD = (toothAnaD && toothAnaD.teeth) ? toothAnaD.teeth : {};
   const cross = Object.keys(summary).filter(fdi => {
     const ti = teethMapD[fdi];
-    return ti && (ti.detected_in_views||[]).length >= 2 && (summary[fdi].hit_verts||0) > 0;
+    return ti && (ti.detected_in_views || []).length >= 2 && (summary[fdi].hit_verts || 0) > 0;
   }).length;
+
   const accHtml = acc ? `
     <p class="history-detail-title" style="margin-top:0.875rem;">各項指標</p>
     <div style="display:flex;flex-direction:column;gap:4px;">
       ${[
-        ['投射命中率', hits / (total || 1)],
+        ['投射命中率', hits / (satTotal || 1)],
         ['多視角驗證', cross / (total || 1)],
       ].map(([label, val]) => `
         <div style="display:grid;grid-template-columns:80px 1fr 36px;align-items:center;gap:8px;">
@@ -391,17 +447,23 @@ function renderPlaqueDetail(stats, toothData) {
             <div style="height:100%;width:${(val*100).toFixed(0)}%;background:${gradeColor(acc.grade)};border-radius:99px;"></div>
           </div>
           <span style="font-size:0.7rem;color:var(--muted);text-align:right;">${(val*100).toFixed(0)}%</span>
-        </div>`).join('')}
-    </div>` : '';
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
   return `
     <p class="history-detail-title">各牙菌斑分布</p>
     <div class="history-plaque-chart">
       ${makeRow(ALL_UPPER, '上')}
       ${makeRow(ALL_LOWER, '下')}
     </div>
-    ${topHtml}${accHtml}`;
+    ${topHtml}
+    ${accHtml}
+  `;
 }
 
+// ===== Dropdown Helpers =====
 export function toggleHfDropdown(id) {
   const dd = document.getElementById(id);
   if (!dd) return;
@@ -447,6 +509,8 @@ export function scrollToHistory(e) {
   if (e) e.preventDefault();
   const section = document.getElementById('history-section');
   if (!section) return;
-  if (section.classList.contains('hidden') && isLoggedIn()) section.classList.remove('hidden');
+  if (section.classList.contains('hidden') && isLoggedIn()) {
+    section.classList.remove('hidden');
+  }
   section.scrollIntoView({ behavior: 'smooth' });
 }

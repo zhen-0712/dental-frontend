@@ -64,6 +64,7 @@ function renderLeftPanel(toothData, plaqueStats, state, plaqueRegions) {
       document.getElementById('suspicious-list').innerHTML =
         suspects.map(t => `<span class="suspect-badge">${t}</span>`).join('');
     }
+
     renderToothAccuracy(toothData);
   }
 
@@ -73,7 +74,8 @@ function renderLeftPanel(toothData, plaqueStats, state, plaqueRegions) {
       plaqueStats.plaque_ratio != null ? `${(plaqueStats.plaque_ratio * 100).toFixed(1)}%` : '—';
     document.getElementById('stat-plaque-teeth').textContent = Object.keys(summary).length;
     renderPlaqueToothChart(summary, toothData);
-    renderPlaqueAccuracy(plaqueStats);
+
+    renderPlaqueAccuracy(plaqueStats, plaqueRegions);
   }
 
   if (state.currentModel === 'base') {
@@ -83,7 +85,7 @@ function renderLeftPanel(toothData, plaqueStats, state, plaqueRegions) {
   }
 }
 
-// ===== 牙齒模型準確度 =====
+// ===== 牙齒模型準確度計算 =====
 function calcToothAccuracy(toothData) {
   if (!toothData) return null;
   const teeth = toothData.teeth || {};
@@ -93,11 +95,14 @@ function calcToothAccuracy(toothData) {
   const neverDetected = (toothData.never_detected || []).length;
   const detectedCount = (toothData.detected_teeth || []).length;
   const detectionCoverage = detectedCount / (detectedCount + neverDetected);
+
   const confidences = Object.values(teeth).map(t => t.confidence || 0);
   const avgConfidence = confidences.reduce((a, b) => a + b, 0) / confidences.length;
+
   const multiViewCount = Object.values(teeth).filter(t => t.num_views >= 2).length;
   const multiViewRate = multiViewCount / total;
 
+  // 各視角偵測數（僅供參考，不列入計算）
   const byView = toothData.by_view || {};
   const viewCoverage = {};
   const viewLabels = {
@@ -105,7 +110,8 @@ function calcToothAccuracy(toothData) {
     'upper_occlusal.jpg': '上顎咬合', 'lower_occlusal.jpg': '下顎咬合'
   };
   Object.entries(byView).forEach(([view, list]) => {
-    viewCoverage[viewLabels[view] || view] = list.length;
+    const label = viewLabels[view] || view;
+    viewCoverage[label] = list.length;
   });
 
   const overallScore = detectionCoverage * 0.35 + avgConfidence * 0.40 + multiViewRate * 0.25;
@@ -122,7 +128,9 @@ function renderToothAccuracy(toothData) {
   if (!el) return;
   const acc = calcToothAccuracy(toothData);
   if (!acc) { el.innerHTML = ''; return; }
+
   const { detectionCoverage, avgConfidence, multiViewRate, viewCoverage, overallScore, grade } = acc;
+
   const viewRows = Object.entries(viewCoverage).map(([label, count]) => `
     <div class="acc-item acc-item-sub">
       <span class="acc-label">${label}</span>
@@ -130,7 +138,9 @@ function renderToothAccuracy(toothData) {
         <span class="acc-bar" style="width:${Math.min(count/16*100,100).toFixed(0)}%;background:rgba(3,105,94,0.45);"></span>
       </div>
       <span class="acc-pct">${count} 顆</span>
-    </div>`).join('');
+    </div>
+  `).join('');
+
   el.innerHTML = `
     <div class="accuracy-badge">
       <div class="acc-header">
@@ -141,37 +151,49 @@ function renderToothAccuracy(toothData) {
       <div class="acc-details">
         <div class="acc-item">
           <span class="acc-label">偵測覆蓋</span>
-          <div class="acc-bar-wrap"><span class="acc-bar" style="width:${(detectionCoverage*100).toFixed(0)}%;background:${grade.color};"></span></div>
+          <div class="acc-bar-wrap">
+            <span class="acc-bar" style="width:${(detectionCoverage*100).toFixed(0)}%;background:${grade.color};"></span>
+          </div>
           <span class="acc-pct">${(detectionCoverage*100).toFixed(0)}%</span>
         </div>
         <div class="acc-item">
           <span class="acc-label">平均可信度</span>
-          <div class="acc-bar-wrap"><span class="acc-bar" style="width:${(avgConfidence*100).toFixed(0)}%;background:${grade.color};"></span></div>
+          <div class="acc-bar-wrap">
+            <span class="acc-bar" style="width:${(avgConfidence*100).toFixed(0)}%;background:${grade.color};"></span>
+          </div>
           <span class="acc-pct">${(avgConfidence*100).toFixed(0)}%</span>
         </div>
         <div class="acc-item">
           <span class="acc-label">多視角驗證</span>
-          <div class="acc-bar-wrap"><span class="acc-bar" style="width:${(multiViewRate*100).toFixed(0)}%;background:${grade.color};"></span></div>
+          <div class="acc-bar-wrap">
+            <span class="acc-bar" style="width:${(multiViewRate*100).toFixed(0)}%;background:${grade.color};"></span>
+          </div>
           <span class="acc-pct">${(multiViewRate*100).toFixed(0)}%</span>
         </div>
         <div class="acc-subsection-label">各視角偵測數（僅供參考）</div>
         ${viewRows}
       </div>
       <p class="acc-note">偵測覆蓋 × 35% ＋ 平均可信度 × 40% ＋ 多視角驗證 × 25%</p>
-    </div>`;
+    </div>
+  `;
 }
 
-// ===== 菌斑分析準確度 =====
+// ===== 菌斑分析準確度計算 =====
 function calcPlaqueAccuracy(plaqueStats, toothData) {
   if (!plaqueStats) return null;
+
   const summary = plaqueStats.fdi_plaque_summary || {};
   const totalFdiWithPlaque = Object.keys(summary).length;
   if (totalFdiWithPlaque === 0) return null;
 
+  // 1. 投射命中率：分母用後端記錄的「SAT 偵測到 + roi_mask 有菌斑」的真實牙數
+  //    舊資料沒有 sat_plaque_fdi_count 時 fallback 到 summary 長度
   const satPlaqueTotal = plaqueStats.sat_plaque_fdi_count || totalFdiWithPlaque;
   const fdiWithHits = Object.values(summary).filter(v => v.hit_verts > 0).length;
   const projectionHitRate = fdiWithHits / satPlaqueTotal;
 
+  // 2. 多視角交叉驗證率：有菌斑且 SAT 在 2+ 個視角偵測到的牙齒
+  //    用 real_teeth_analysis 的 detected_in_views（不受 roi_mask 噪訊影響）
   const teethMap = (toothData && toothData.teeth) ? toothData.teeth : {};
   const multiViewFdi = Object.keys(summary).filter(fdi => {
     const toothInfo = teethMap[fdi];
@@ -180,6 +202,8 @@ function calcPlaqueAccuracy(plaqueStats, toothData) {
   }).length;
   const crossViewRate = multiViewFdi / totalFdiWithPlaque;
 
+  // 3. 各視角覆蓋率（用 SAT by_view，不受 roi_mask 噪訊影響）
+  //    計算：有菌斑的牙齒中，有幾顆在該視角被 SAT 偵測到
   const viewKeyMap = {
     'front.jpg': '正面', 'left_side.jpg': '左側', 'right_side.jpg': '右側',
     'upper_occlusal.jpg': '上顎咬合', 'lower_occlusal.jpg': '下顎咬合'
@@ -193,7 +217,9 @@ function calcPlaqueAccuracy(plaqueStats, toothData) {
     viewHitCoverage[label] = totalFdiWithPlaque > 0 ? overlap / totalFdiWithPlaque : 0;
   });
 
+  // 4. 綜合分數：投射命中 × 60% + 多視角驗證 × 40%
   const overallScore = projectionHitRate * 0.60 + crossViewRate * 0.40;
+
   const grade = overallScore >= 0.80 ? { label: 'A', color: '#03695e' }
               : overallScore >= 0.60 ? { label: 'B', color: '#6daf5f' }
               : overallScore >= 0.40 ? { label: 'C', color: '#e8a020' }
@@ -202,18 +228,24 @@ function calcPlaqueAccuracy(plaqueStats, toothData) {
   return { projectionHitRate, crossViewRate, viewHitCoverage, overallScore, grade, totalFdiWithPlaque };
 }
 
-function renderPlaqueAccuracy(plaqueStats) {
+function renderPlaqueAccuracy(plaqueStats, plaqueRegions) {
   const el = document.getElementById('plaque-accuracy-wrap');
   if (!el) return;
   const acc = calcPlaqueAccuracy(plaqueStats, window._toothData);
   if (!acc) { el.innerHTML = ''; return; }
+
   const { projectionHitRate, crossViewRate, viewHitCoverage, overallScore, grade, totalFdiWithPlaque } = acc;
+
   const viewRows = Object.entries(viewHitCoverage).map(([label, rate]) => `
     <div class="acc-item acc-item-sub">
       <span class="acc-label">${label}</span>
-      <div class="acc-bar-wrap"><span class="acc-bar" style="width:${(rate*100).toFixed(0)}%;background:rgba(3,105,94,0.45);"></span></div>
+      <div class="acc-bar-wrap">
+        <span class="acc-bar" style="width:${(rate*100).toFixed(0)}%;background:rgba(3,105,94,0.45);"></span>
+      </div>
       <span class="acc-pct">${(rate*100).toFixed(0)}%</span>
-    </div>`).join('');
+    </div>
+  `).join('');
+
   el.innerHTML = `
     <div class="accuracy-badge">
       <div class="acc-header">
@@ -224,19 +256,24 @@ function renderPlaqueAccuracy(plaqueStats) {
       <div class="acc-details">
         <div class="acc-item">
           <span class="acc-label">投射命中率</span>
-          <div class="acc-bar-wrap"><span class="acc-bar" style="width:${(projectionHitRate*100).toFixed(0)}%;background:${grade.color};"></span></div>
+          <div class="acc-bar-wrap">
+            <span class="acc-bar" style="width:${(projectionHitRate*100).toFixed(0)}%;background:${grade.color};"></span>
+          </div>
           <span class="acc-pct">${(projectionHitRate*100).toFixed(0)}%</span>
         </div>
         <div class="acc-item">
           <span class="acc-label">多視角驗證</span>
-          <div class="acc-bar-wrap"><span class="acc-bar" style="width:${(crossViewRate*100).toFixed(0)}%;background:${grade.color};"></span></div>
+          <div class="acc-bar-wrap">
+            <span class="acc-bar" style="width:${(crossViewRate*100).toFixed(0)}%;background:${grade.color};"></span>
+          </div>
           <span class="acc-pct">${(crossViewRate*100).toFixed(0)}%</span>
         </div>
         <div class="acc-subsection-label">各視角命中覆蓋（僅供參考）</div>
         ${viewRows}
       </div>
       <p class="acc-note">投射命中 × 60% ＋ 多視角驗證 × 40%　·　偵測到有菌斑的牙齒：${totalFdiWithPlaque} 顆</p>
-    </div>`;
+    </div>
+  `;
 }
 
 function renderToothChart(toothData) {
@@ -246,6 +283,7 @@ function renderToothChart(toothData) {
     ...(toothData.suspicious?.low_confidence || []),
     ...(toothData.suspicious?.insufficient_views || []),
   ].map(Number));
+
   const chart = document.getElementById('tooth-chart');
   chart.innerHTML = [
     { teeth: ALL_TEETH_UPPER, label: '上' },
@@ -257,15 +295,18 @@ function renderToothChart(toothData) {
         const cls = missing.has(t) ? 'missing' : suspects.has(t) ? 'suspect' : detected.has(t) ? 'present' : 'missing';
         return `<div class="tooth-chip ${cls}" title="FDI ${t}">${t}</div>`;
       }).join('')}
-    </div>`).join('');
+    </div>
+  `).join('');
 }
 
 function renderPlaqueToothChart(summary, toothData) {
   const maxPx = Math.max(...Object.values(summary).map(v => v.total_plaque_px), 1);
   const plaqueMap = {};
   Object.entries(summary).forEach(([fdi, info]) => { plaqueMap[Number(fdi)] = info.total_plaque_px; });
+
   const _td = toothData || window._toothData;
   const missing = new Set((_td?.never_detected || []).map(Number));
+
   function makeRow(teeth, label) {
     return `<div class="plaque-tooth-row">
       <span class="tooth-chart-label">${label}</span>
@@ -281,6 +322,7 @@ function renderPlaqueToothChart(summary, toothData) {
       }).join('')}
     </div>`;
   }
+
   document.getElementById('plaque-tooth-chart').innerHTML =
     makeRow(ALL_TEETH_UPPER, '上') + makeRow(ALL_TEETH_LOWER, '下');
 }
@@ -289,6 +331,7 @@ export function render3DViewer(mode) {
   const frame  = document.getElementById('viewer-frame');
   const glbUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.glb' : 'custom_real_teeth.glb');
   const objUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.obj' : 'custom_real_teeth.obj');
+
   frame.innerHTML = '';
   const mv = document.createElement('model-viewer');
   mv.setAttribute('src', glbUrl);

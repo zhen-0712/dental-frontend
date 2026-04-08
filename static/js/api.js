@@ -46,10 +46,13 @@ export async function fetchPlaqueStats() {
   return res.json();
 }
 
+// ===== 新增：取得 plaque_regions.json（供準確度評估用）=====
 export async function fetchPlaqueRegions() {
-  const res = await fetch(getFileUrl('plaque_regions.json'));
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE}/files/plaque_regions.json`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch(e) { return null; }
 }
 
 function authHeaders() {
