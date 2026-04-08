@@ -1,0 +1,52 @@
+.upload-section { background: transparent; }
+.upload-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 1rem; margin-bottom: 2rem;
+}
+.upload-zone {
+  position: relative;
+  aspect-ratio: 3/4; border-radius: var(--radius-md);
+  border: 2px dashed rgba(3,105,94,0.25);
+  background: rgba(255,255,255,0.5);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.5rem; cursor: pointer;
+  transition: all var(--transition); overflow: hidden;
+}
+.upload-zone:hover { border-color: var(--jade); background: rgba(3,105,94,0.04); }
+.upload-zone.has-file { border-color: var(--jade); border-style: solid; }
+.upload-zone-icon { color: var(--muted); opacity: 0.5; }
+.upload-zone-label { font-size: 0.75rem; font-weight: 500; color: var(--muted); text-align: center; padding: 0 0.5rem; }
+.upload-preview { position: absolute; inset: 0; display: none; }
+.upload-preview.visible { display: block; }
+.upload-preview img { width: 100%; height: 100%; object-fit: cover; }
+.upload-input { display: none; }
+.upload-submit-row { display: flex; justify-content: center; margin-top: 1rem; }
+
+/* ===== Photo Check Badge ===== */
+.photo-check-badge {
+  position: absolute; bottom: 6px; left: 6px; right: 6px;
+  border-radius: 6px; font-size: 0.68rem; font-weight: 500;
+  padding: 5px 8px; pointer-events: none; z-index: 10; line-height: 1.4;
+}
+.photo-check-badge.ok {
+  background: rgba(109,175,95,0.18); color: #3a7a30;
+  border: 1px solid rgba(109,175,95,0.35);
+  display: flex; align-items: center; gap: 4px;
+}
+.photo-check-badge.warn {
+  background: rgba(232,160,32,0.15); color: #a06010;
+  border: 1px solid rgba(232,160,32,0.35);
+}
+.photo-check-badge.checking {
+  background: rgba(3,105,94,0.08); color: var(--muted);
+  border: 1px solid rgba(3,105,94,0.15);
+  display: flex; align-items: center; gap: 5px;
+}
+.pcb-title { display: flex; align-items: center; gap: 4px; font-weight: 600; }
+.pcb-tip { margin-top: 2px; color: #c07820; font-size: 0.64rem; }
+.pcb-spinner {
+  width: 10px; height: 10px;
+  border: 2px solid rgba(3,105,94,0.2); border-top-color: var(--jade);
+  border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0;
+}

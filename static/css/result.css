@@ -1,0 +1,38 @@
+.result-section { background: transparent; }
+.result-card {
+  background: rgba(255,255,255,0.7); backdrop-filter: blur(20px);
+  border: 1px solid rgba(3,105,94,0.12); border-radius: var(--radius-lg);
+  padding: 2rem; box-shadow: var(--shadow-md);
+}
+.model-toggle {
+  display: flex; gap: 4px; background: rgba(3,105,94,0.06);
+  border-radius: 99px; padding: 4px; margin-bottom: 1.5rem; width: fit-content;
+}
+.toggle-btn {
+  padding: 6px 20px; border-radius: 99px; font-size: 0.875rem; font-weight: 500;
+  color: var(--muted); transition: all var(--transition); cursor: pointer;
+}
+.toggle-btn.active { background: var(--white); color: var(--jade); box-shadow: var(--shadow-sm); }
+.mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+.mini-stat { background: rgba(244,246,239,0.8); border-radius: var(--radius-md); padding: 0.875rem 1rem; text-align: center; }
+.mini-stat-val { font-family: var(--font-display); font-size: 1.75rem; color: var(--jade); line-height: 1; margin-bottom: 4px; }
+.mini-stat-val.red { color: var(--red-plaque); }
+.mini-stat-label { font-size: 0.75rem; color: var(--muted); }
+.viewer-frame { width: 100%; aspect-ratio: 1/1; border-radius: var(--radius-md); overflow: hidden; background: rgba(244,246,239,0.5); }
+.viewer-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: var(--muted); }
+.download-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+.plaque-tooth-row { display: flex; align-items: flex-end; gap: 3px; margin-bottom: 6px; }
+.plaque-tooth-chip {
+  width: 28px; height: 40px; border-radius: 6px;
+  background: rgba(3,105,94,0.06); border: 1.5px solid rgba(3,105,94,0.15);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  overflow: hidden; position: relative; cursor: default;
+}
+.plaque-tooth-chip.missing-tooth { background: rgba(192,57,43,0.05); border-color: rgba(192,57,43,0.15); }
+.plaque-tooth-chip.no-plaque     { background: rgba(109,175,95,0.08); border-color: rgba(109,175,95,0.2); }
+.plaque-tooth-fill { width: 100%; background: linear-gradient(to top, var(--red-plaque), rgba(192,57,43,0.5)); border-radius: 3px 3px 0 0; transition: height 0.4s ease; }
+.plaque-tooth-label { font-size: 0.5rem; font-weight: 700; color: var(--muted); padding-bottom: 2px; z-index: 1; }
+.missing-wrap, .suspicious-wrap { margin-top: 0.75rem; }
+.missing-wrap p, .suspicious-wrap p { font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
+.missing-list, .suspicious-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.accuracy-badge-wrap { margin-top: 0.5rem; }

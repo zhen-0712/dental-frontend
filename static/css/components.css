@@ -1,0 +1,76 @@
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, var(--jade) 0%, var(--jade-light) 100%);
+  color: var(--white); border-radius: var(--radius-xl);
+  font-family: var(--font-body); font-size: 1rem; font-weight: 500;
+  cursor: pointer; border: none; transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0.75rem 2rem;
+  background: transparent; color: var(--jade);
+  border: 2px solid var(--jade); border-radius: var(--radius-xl);
+  font-family: var(--font-body); font-size: 1rem; font-weight: 500;
+  cursor: pointer; transition: all var(--transition);
+}
+.btn-secondary:hover { background: var(--jade); color: var(--white); }
+.btn-secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0.5rem 1.25rem;
+  background: transparent; color: var(--jade);
+  border: 1.5px solid rgba(3,105,94,0.3); border-radius: var(--radius-xl);
+  font-size: 0.875rem; font-weight: 500; cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-outline:hover { border-color: var(--jade); background: rgba(3,105,94,0.05); }
+.missing-badge {
+  display: inline-block; padding: 2px 8px;
+  background: rgba(192,57,43,0.1); color: #c0392b;
+  border: 1px solid rgba(192,57,43,0.2); border-radius: 20px;
+  font-size: 0.75rem; font-weight: 600;
+}
+.suspect-badge {
+  display: inline-block; padding: 2px 8px;
+  background: rgba(232,160,32,0.1); color: #a06010;
+  border: 1px solid rgba(232,160,32,0.2); border-radius: 20px;
+  font-size: 0.75rem; font-weight: 600;
+}
+.tooth-chip {
+  width: 28px; height: 28px; border-radius: 6px;
+  font-size: 0.6rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid transparent; transition: all 0.15s;
+}
+.tooth-chip.present  { background: rgba(3,105,94,0.12);  border-color: rgba(3,105,94,0.25);  color: var(--jade); }
+.tooth-chip.missing  { background: rgba(192,57,43,0.08); border-color: rgba(192,57,43,0.18); color: #c0392b; }
+.tooth-chip.suspect  { background: rgba(232,160,32,0.10);border-color: rgba(232,160,32,0.25);color: #a06010; }
+.tooth-chart-row { display: flex; align-items: center; gap: 3px; margin-bottom: 6px; }
+.tooth-chart-label { font-size: 0.7rem; font-weight: 700; color: var(--muted); width: 14px; flex-shrink: 0; }
+.accuracy-badge {
+  background: rgba(255,255,255,0.7); backdrop-filter: blur(12px);
+  border: 1px solid rgba(3,105,94,0.12); border-radius: var(--radius-md);
+  padding: 1rem 1.25rem; margin-top: 1rem;
+}
+.acc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+.acc-title { font-size: 0.8rem; font-weight: 600; color: var(--muted); flex: 1; }
+.acc-grade { color: #fff; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.acc-score { font-size: 1rem; font-weight: 700; color: var(--ink); }
+.acc-details { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.acc-item { display: grid; grid-template-columns: 72px 1fr 36px; align-items: center; gap: 8px; }
+.acc-item-sub .acc-label { color: var(--muted); font-size: 0.72rem; }
+.acc-item-sub .acc-pct   { color: var(--muted); font-size: 0.72rem; }
+.acc-label { font-size: 0.75rem; color: var(--ink-soft); }
+.acc-bar-wrap { height: 5px; background: rgba(3,105,94,0.08); border-radius: 99px; overflow: hidden; }
+.acc-bar { display: block; height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+.acc-pct { font-size: 0.72rem; color: var(--muted); text-align: right; }
+.acc-note { font-size: 0.68rem; color: var(--muted); margin-top: 6px; }
+.acc-subsection-label {
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted);
+  margin-top: 0.625rem; margin-bottom: 0.125rem;
+}
