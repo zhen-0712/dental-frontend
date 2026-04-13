@@ -1,5 +1,6 @@
 // ===== auth.js - 帳號管理、登入/註冊 =====
 import { API_BASE } from './api.js';
+import { fetchAnalyses } from './history.js';
 
 const TOKEN_KEY = 'dentalvis_token';
 const USER_KEY  = 'dentalvis_user';
