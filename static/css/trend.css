@@ -1,5 +1,65 @@
 /* ===== Trend Section ===== */
-.trend-section { background: transparent; }
+.trend-section { background: rgba(255,255,255,0.3); }
+
+/* ===== 模式 Tabs ===== */
+.trend-mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1.25rem;
+}
+
+.trend-mode-btn {
+  padding: 0.45rem 1.3rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  border: none;
+  background: transparent;
+}
+
+.trend-mode-btn.active {
+  background: var(--jade);
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(3,105,94,0.25);
+}
+
+/* ===== Overall 顎別篩選 ===== */
+.trend-overall-controls {
+  margin-bottom: 1rem;
+}
+
+.trend-jaw-filter {
+  display: flex;
+  gap: 6px;
+}
+
+.trend-jaw-btn {
+  padding: 0.35rem 1.1rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1.5px solid rgba(35,157,202,0.3);
+  background: transparent;
+  color: var(--aqua);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.trend-jaw-btn.active {
+  background: var(--aqua);
+  border-color: var(--aqua);
+  color: #fff;
+}
+
+.trend-jaw-btn:hover:not(.active) {
+  background: rgba(35,157,202,0.1);
+}
+
+/* ===== Detail 控制區 ===== */
+.trend-detail-controls { margin-bottom: 0; }
 
 .trend-card {
   background: rgba(255,255,255,0.7);

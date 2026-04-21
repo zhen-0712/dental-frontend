@@ -296,30 +296,6 @@
 
 
   <!-- History -->
-    <!-- ===== Trend Section ===== -->
-  <section class="section trend-section hidden" id="trend-section">
-    <div class="container">
-      <div class="section-header">
-        <p class="section-eyebrow">Progress Tracking</p>
-        <h2 class="section-title">菌斑趨勢分析</h2>
-        <p class="section-desc">追蹤各顆牙齒的菌斑變化，看見刷牙習慣改善的成效</p>
-      </div>
-      <div class="trend-card">
-        <div class="trend-top">
-          <div class="trend-selector-wrap">
-            <p class="trend-selector-label">選擇牙齒（最多 10 顆）</p>
-            <div id="trend-fdi-selector"></div>
-          </div>
-          <div id="trend-legend" class="trend-legend"></div>
-        </div>
-        <div class="trend-chart-wrap">
-          <canvas id="trend-canvas"></canvas>
-        </div>
-        <p class="trend-note">縱軸為菌斑像素量（數值越低代表改善越多）</p>
-      </div>
-    </div>
-  </section>
-
   <section class="section history-section hidden" id="history-section">
     <div class="container">
       <div class="section-header">
@@ -333,6 +309,34 @@
         <button class="history-filter-btn" data-filter="all" onclick="window.setHistoryFilter('all')">全部</button>
       </div>
       <div class="history-grid" id="history-grid"></div>
+    </div>
+  </section>
+
+  <!-- ===== Trend Section ===== -->
+  <section class="section trend-section hidden" id="trend-section">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-eyebrow">趨勢追蹤</p>
+        <h2 class="section-title">菌斑趨勢分析</h2>
+        <p class="section-desc">追蹤菌斑覆蓋率的長期變化，見證刷牙習慣改善的成效。</p>
+      </div>
+      <div class="trend-card">
+        <div class="trend-mode-tabs" id="trend-mode-tabs"></div>
+        <div id="trend-overall-controls" class="trend-overall-controls hidden"></div>
+        <div id="trend-detail-controls" class="trend-detail-controls hidden">
+          <div class="trend-top">
+            <div class="trend-selector-wrap">
+              <p class="trend-selector-label">選擇牙齒</p>
+              <div id="trend-fdi-selector"></div>
+            </div>
+            <div id="trend-legend" class="trend-legend"></div>
+          </div>
+        </div>
+        <div class="trend-chart-wrap">
+          <canvas id="trend-canvas"></canvas>
+        </div>
+        <p class="trend-note" id="trend-note"></p>
+      </div>
     </div>
   </section>
 

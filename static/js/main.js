@@ -140,6 +140,7 @@ function poll() {
         }
         await loadExistingData();
         renderHistorySection();
+        fetchAnalyses().then(all => renderTrendSection(all));
         document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
       } else if (data.status === 'failed') {
         clearInterval(state.pollTimer);
