@@ -3,8 +3,8 @@ import { captureOverallChart, captureJawCharts } from './trend.js';
 
 // 五個截圖角度（菌斑模型）
 const SNAP_ANGLES = [
-  { label: '右側',  orbit: '90deg 75deg auto',  fov: '38deg' },
-  { label: '左側',  orbit: '270deg 75deg auto', fov: '38deg' },
+  { label: '左側',  orbit: '90deg 75deg auto',  fov: '38deg' },
+  { label: '右側',  orbit: '270deg 75deg auto', fov: '38deg' },
   { label: '正面',  orbit: '0deg 75deg auto',   fov: '38deg' },
   { label: '上俯視', orbit: '0deg 5deg auto',   fov: '45deg' },
   { label: '下俯視', orbit: '0deg 175deg auto', fov: '45deg' },
