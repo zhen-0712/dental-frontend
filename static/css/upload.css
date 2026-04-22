@@ -50,3 +50,55 @@
   border: 2px solid rgba(3,105,94,0.2); border-top-color: var(--jade);
   border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0;
 }
+
+/* ===== Camera Mode Toggle ===== */
+.camera-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.camera-mode-toggle {
+  display: flex;
+  background: rgba(3,105,94,0.07);
+  border-radius: var(--radius-xl);
+  padding: 3px;
+}
+
+.camera-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.38rem 1.1rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.camera-mode-btn.active {
+  background: var(--jade);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(3,105,94,0.25);
+}
+
+.camera-mode-btn:not(.active):hover {
+  color: var(--jade);
+}
+
+.camera-mode-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.camera-mode-hint.mirror-on {
+  color: var(--aqua);
+}

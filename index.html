@@ -119,6 +119,19 @@
         </div><div class="upload-preview" id="init-preview-lower_occlusal"></div></div>
       </div>
 
+      <div class="camera-mode-row">
+        <div class="camera-mode-toggle">
+          <button class="camera-mode-btn active" id="init-cam-front" onclick="window.setMirrorInit(false)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            前置相機
+          </button>
+          <button class="camera-mode-btn" id="init-cam-rear" onclick="window.setMirrorInit(true)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            後置相機
+          </button>
+        </div>
+        <p class="camera-mode-hint" id="init-camera-hint">前置相機，左右方向已正確</p>
+      </div>
       <div class="submit-area">
         <button class="btn-primary btn-large" id="btn-init" disabled>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
@@ -170,6 +183,19 @@
         </div><div class="upload-preview" id="plaque-preview-lower_occlusal"></div></div>
       </div>
 
+      <div class="camera-mode-row">
+        <div class="camera-mode-toggle">
+          <button class="camera-mode-btn active" id="plaque-cam-front" onclick="window.setMirrorPlaque(false)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            前置相機
+          </button>
+          <button class="camera-mode-btn" id="plaque-cam-rear" onclick="window.setMirrorPlaque(true)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            後置相機
+          </button>
+        </div>
+        <p class="camera-mode-hint" id="plaque-camera-hint">前置相機，左右方向已正確</p>
+      </div>
       <div class="submit-area">
         <button class="btn-primary btn-large btn-plaque" id="btn-plaque" disabled>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>

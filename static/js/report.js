@@ -1,42 +1,37 @@
 // ===== report.js - PDF 報告產生器（HTML 列印版，支援中文）=====
-import { captureJawCharts } from './trend.js';
+import { captureOverallChart, captureJawCharts } from './trend.js';
+
+// 五個截圖角度（菌斑模型）
+const SNAP_ANGLES = [
+  { label: '右側',  orbit: '90deg 75deg auto',  fov: '38deg' },
+  { label: '左側',  orbit: '270deg 75deg auto', fov: '38deg' },
+  { label: '正面',  orbit: '0deg 75deg auto',   fov: '38deg' },
+  { label: '上俯視', orbit: '0deg 5deg auto',   fov: '45deg' },
+  { label: '下俯視', orbit: '0deg 175deg auto', fov: '45deg' },
+];
 
 export async function generateReport(toothData, plaqueStats) {
   const btn = document.getElementById('btn-report');
-  if (btn) { btn.disabled = true; btn.textContent = '截圖中，請稍候…'; }
+  if (btn) { btn.disabled = true; btn.textContent = '準備中…'; }
 
   try {
     const now = new Date();
     const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-    // 擷取趨勢圖（整體 + 上下顎詳細）
-    let trendImgSrc = '';
-    const trendCanvas  = document.getElementById('trend-canvas');
-    const trendSection = document.getElementById('trend-section');
-    if (trendCanvas && trendSection && !trendSection.classList.contains('hidden')) {
-      try { trendImgSrc = trendCanvas.toDataURL('image/png'); } catch(e) {}
-    }
-    const selectedFdiList = window._trendSelectedFdis  || [];
-    const trendMode       = window._trendMode          || 'overall';
-    const trendFilter     = window._trendOverallFilter || 'all';
-
-    // 離屏渲染上下顎詳細圖（不影響頁面上的當前選擇）
+    // ===== 趨勢圖（全部離屏渲染，不影響頁面）=====
+    const overallImg = captureOverallChart();
     const { upper: upperJawImg, lower: lowerJawImg, upperFdis, lowerFdis } = captureJawCharts();
 
-    // ===== 3D 模型截圖（必須循序執行，共用同一個 model-viewer）=====
-    if (btn) btn.textContent = '模型截圖中（約 30 秒）…';
-    let baseImg   = null;
-    let plaqueImg = null;
-    try { baseImg   = await snap3D('base');   } catch(e) { console.error('base snap:', e); }
-    try { plaqueImg = await snap3D('plaque'); } catch(e) { console.error('plaque snap:', e); }
+    // ===== 3D 菌斑模型：5 個角度（循序截圖）=====
+    if (btn) btn.textContent = '3D 模型載入中…';
+    const snapResults = await snapPlaqueAllAngles(btn);
     restoreViewer();
 
-    // 建構 HTML 並列印
+    // ===== 建構 HTML 並列印 =====
     const html = buildReportHTML(
       toothData, plaqueStats, dateStr,
-      trendImgSrc, selectedFdiList, trendMode, trendFilter,
-      upperJawImg, lowerJawImg, upperFdis, lowerFdis,
-      baseImg, plaqueImg
+      overallImg, upperJawImg, lowerJawImg, upperFdis, lowerFdis,
+      snapResults
     );
 
     const win = window.open('', '_blank');
@@ -52,36 +47,45 @@ export async function generateReport(toothData, plaqueStats) {
   }
 }
 
-// ===== 3D 截圖（循序呼叫，每次操作同一個 model-viewer）=====
-async function snap3D(mode) {
+// ===== 3D 截圖：載入一次，循環變換角度 =====
+async function snapPlaqueAllAngles(btn) {
   const frame = document.getElementById('viewer-frame');
-  if (!frame) return null;
+  if (!frame) return [];
 
   const { getFileUrl } = await import('./api.js');
-  const glbUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.glb' : 'custom_real_teeth.glb');
-
+  const glbUrl = getFileUrl('plaque_by_fdi.glb');
   const mv = frame.querySelector('model-viewer');
-  if (!mv) return null;
+  if (!mv) return [];
 
-  // 俯視咬合面：polar=10deg（接近正上方），FOV 稍大以涵蓋整個牙弓
+  // 載入模型一次
   mv.removeAttribute('auto-rotate');
-  mv.setAttribute('camera-orbit',  '0deg 10deg auto');
-  mv.setAttribute('field-of-view', '45deg');
+  mv.setAttribute('field-of-view', '38deg');
   mv.setAttribute('src', glbUrl);
 
   await new Promise(resolve => {
     const timeout = setTimeout(resolve, 16000);
     mv.addEventListener('load', () => { clearTimeout(timeout); resolve(); }, { once: true });
   });
-  await new Promise(r => setTimeout(r, 1800));
+  await new Promise(r => setTimeout(r, 1200));
 
-  try {
-    const blob = await mv.toBlob({ idealAspect: false });
-    return await blobToBase64(blob);
-  } catch(e) {
-    console.error('toBlob failed:', e);
-    return null;
+  // 循環 5 個角度
+  const results = [];
+  for (let i = 0; i < SNAP_ANGLES.length; i++) {
+    const { label, orbit, fov } = SNAP_ANGLES[i];
+    if (btn) btn.textContent = `截圖中 ${i + 1}/${SNAP_ANGLES.length}（${label}）…`;
+
+    mv.setAttribute('camera-orbit', orbit);
+    mv.setAttribute('field-of-view', fov);
+    await new Promise(r => setTimeout(r, 900)); // 等相機移動與重繪穩定
+
+    let img = null;
+    try {
+      const blob = await mv.toBlob({ idealAspect: false });
+      img = await blobToBase64(blob);
+    } catch(e) { console.error(`snap ${label} failed:`, e); }
+    results.push({ label, img });
   }
+  return results;
 }
 
 function restoreViewer() {
@@ -100,11 +104,10 @@ function restoreViewer() {
 // ===== HTML 報告建構 =====
 function buildReportHTML(
   toothData, plaqueStats, dateStr,
-  trendImgSrc, selectedFdiList, trendMode, trendFilter,
-  upperJawImg, lowerJawImg, upperFdis, lowerFdis,
-  baseImg, plaqueImg
+  overallImg, upperJawImg, lowerJawImg, upperFdis, lowerFdis,
+  snapResults
 ) {
-  const C = { jade:'#03695e', red:'#c0392b', muted:'#5a7068', ink:'#1a2420', bg:'#eaede3', aqua:'#239dca' };
+  const C = { jade:'#03695e', red:'#c0392b', muted:'#5a7068', ink:'#1a2420', bg:'#eaede3' };
 
   // ===== 牙齒偵測摘要 =====
   let toothSection = '';
@@ -152,49 +155,41 @@ function buildReportHTML(
     barSection = sec('各顆牙齒菌斑量', `<div class="bar-chart">${bars}</div>`);
   }
 
-  // ===== 趨勢圖：整體 =====
-  let trendSection = '';
-  if (trendImgSrc) {
-    const modeLabel   = trendMode === 'overall' ? '整體趨勢' : '牙齒明細';
-    const filterLabel = trendMode === 'overall'
-      ? { all:'全部', upper:'上顎', lower:'下顎' }[trendFilter]
-      : (selectedFdiList.length > 0 ? `FDI：${selectedFdiList.join('、')}` : '');
-    const subtitle = filterLabel ? `${modeLabel} · ${filterLabel}` : modeLabel;
-    trendSection = sec(`菌斑趨勢（${subtitle}）`, `
-      <img src="${trendImgSrc}" style="width:100%;border-radius:6px;display:block;" />
-    `);
-  }
+  // ===== 趨勢圖：整體（全部）=====
+  const trendSection = overallImg
+    ? sec('菌斑趨勢（整體趨勢 · 全部）',
+        `<img src="${overallImg}" style="width:100%;border-radius:6px;display:block;" />`)
+    : '';
 
   // ===== 趨勢圖：上顎詳細 =====
-  let trendUpperSection = '';
-  if (upperJawImg) {
-    trendUpperSection = sec(`上顎菌斑趨勢（FDI：${upperFdis.join('、')}）`, `
-      <img src="${upperJawImg}" style="width:100%;border-radius:6px;display:block;" />
-    `);
-  }
+  const trendUpperSection = upperJawImg
+    ? sec(`上顎菌斑趨勢（FDI：${upperFdis.join('、')}）`,
+        `<img src="${upperJawImg}" style="width:100%;border-radius:6px;display:block;" />`)
+    : '';
 
   // ===== 趨勢圖：下顎詳細 =====
-  let trendLowerSection = '';
-  if (lowerJawImg) {
-    trendLowerSection = sec(`下顎菌斑趨勢（FDI：${lowerFdis.join('、')}）`, `
-      <img src="${lowerJawImg}" style="width:100%;border-radius:6px;display:block;" />
-    `);
-  }
+  const trendLowerSection = lowerJawImg
+    ? sec(`下顎菌斑趨勢（FDI：${lowerFdis.join('、')}）`,
+        `<img src="${lowerJawImg}" style="width:100%;border-radius:6px;display:block;" />`)
+    : '';
 
-  // ===== 3D 模型截圖 =====
-  const imgStyle  = 'width:100%;border-radius:6px;display:block;background:#f4f4f0;';
-  const noSnap    = `<div style="padding:48px 0;background:#eaede3;border-radius:6px;text-align:center;color:#5a7068;font-size:11px;">截圖不可用</div>`;
-  const snapSection = sec('3D 模型截圖（俯視咬合面）', `
-    <div style="display:flex;gap:14px;">
-      <div style="flex:1;text-align:center;">
-        ${baseImg   ? `<img src="${baseImg}"   style="${imgStyle}" />` : noSnap}
-        <p class="snap-label">牙齒模型</p>
-      </div>
-      <div style="flex:1;text-align:center;">
-        ${plaqueImg ? `<img src="${plaqueImg}" style="${imgStyle}" />` : noSnap}
-        <p class="snap-label">菌斑模型</p>
-      </div>
+  // ===== 3D 模型截圖（5 個角度）=====
+  const noSnap = `<div style="padding:32px 0;background:#eaede3;border-radius:6px;text-align:center;color:#5a7068;font-size:10px;">截圖不可用</div>`;
+  const snapCells = SNAP_ANGLES.map(({ label }) => {
+    const found = snapResults.find(r => r.label === label);
+    const img   = found?.img;
+    return `
+      <div style="text-align:center;">
+        ${img ? `<img src="${img}" style="width:100%;border-radius:6px;display:block;background:#f4f4f0;" />` : noSnap}
+        <p style="font-size:10.5px;color:#5a7068;margin-top:5px;">${label}</p>
+      </div>`;
+  }).join('');
+
+  const snapSection = sec('3D 菌斑模型截圖', `
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+      ${snapCells}
     </div>
+    <p style="font-size:10px;color:#5a7068;margin-top:6px;">紅色區域為偵測到的菌斑位置</p>
   `);
 
   return `<!DOCTYPE html>
@@ -234,7 +229,6 @@ function buildReportHTML(
   .bar-track { flex: 1; height: 9px; background: ${C.bg}; border-radius: 5px; overflow: hidden; }
   .bar-fill { height: 100%; background: ${C.red}; border-radius: 5px; }
   .bar-num { width: 58px; font-size: 10.5px; color: ${C.muted}; }
-  .snap-label { font-size: 11px; color: ${C.muted}; margin-top: 6px; }
   .rpt-footer {
     margin-top: 24px; padding-top: 10px; border-top: 1px solid #dde2d6;
     font-size: 9.5px; color: ${C.muted}; text-align: center;

@@ -461,6 +461,20 @@ export async function renderTrendSection(analyses) {
   refreshChart();
 }
 
+// ===== PDF 用：離屏渲染整體趨勢（全部）=====
+export function captureOverallChart() {
+  const records = buildTrendData(trendAnalyses);
+  if (records.length < 2) return null;
+  const offCanvas  = document.createElement('canvas');
+  offCanvas.width  = 900;
+  offCanvas.height = 260;
+  const saved = chartCanvas;
+  chartCanvas = offCanvas;
+  drawOverallChart(records, 'all');
+  chartCanvas = saved;
+  return offCanvas.toDataURL('image/png');
+}
+
 // ===== PDF 用：離屏渲染上下顎各自的詳細圖 =====
 export function captureJawCharts() {
   const records = buildTrendData(trendAnalyses);

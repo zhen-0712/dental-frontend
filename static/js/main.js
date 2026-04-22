@@ -27,6 +27,8 @@ const state = {
   currentModel: 'base',
   hasBase:      false,
   hasPlaque:    false,
+  mirrorInit:   false,
+  mirrorPlaque: false,
 };
 
 // ===== 暴露全域供 HTML onclick =====
@@ -43,6 +45,32 @@ window.onMonthSelect      = onMonthSelect;
 window.scrollToHistory    = scrollToHistory;
 window.toggleHfDropdown   = toggleHfDropdown;
 window.selectHfItem       = selectHfItem;
+
+window.setMirrorInit = function(val) {
+  state.mirrorInit = val;
+  document.getElementById('init-cam-front')?.classList.toggle('active', !val);
+  document.getElementById('init-cam-rear')?.classList.toggle('active',  val);
+  const hint = document.getElementById('init-camera-hint');
+  if (hint) {
+    hint.textContent = val
+      ? '後置相機：照片將自動水平翻轉以修正左右方向'
+      : '前置相機，左右方向已正確';
+    hint.classList.toggle('mirror-on', val);
+  }
+};
+
+window.setMirrorPlaque = function(val) {
+  state.mirrorPlaque = val;
+  document.getElementById('plaque-cam-front')?.classList.toggle('active', !val);
+  document.getElementById('plaque-cam-rear')?.classList.toggle('active',  val);
+  const hint = document.getElementById('plaque-camera-hint');
+  if (hint) {
+    hint.textContent = val
+      ? '後置相機：照片將自動水平翻轉以修正左右方向'
+      : '前置相機，左右方向已正確';
+    hint.classList.toggle('mirror-on', val);
+  }
+};
 
 // ===== 初始化 =====
 renderHeaderUser();
@@ -105,7 +133,7 @@ async function startInit() {
   document.getElementById('btn-init').disabled = true;
   showProgress('init');
   try {
-    const data = await submitInit(initFiles);
+    const data = await submitInit(initFiles, state.mirrorInit);
     state.taskId = data.task_id;
     poll();
   } catch { showError('無法連接伺服器'); }
@@ -117,7 +145,7 @@ async function startPlaque() {
   document.getElementById('btn-plaque').disabled = true;
   showProgress('plaque');
   try {
-    const data = await submitPlaque(plaqueFiles);
+    const data = await submitPlaque(plaqueFiles, state.mirrorPlaque);
     state.taskId = data.task_id;
     poll();
   } catch { showError('無法連接伺服器'); }

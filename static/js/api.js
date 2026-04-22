@@ -60,22 +60,24 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export async function submitInit(filesObj) {
+export async function submitInit(filesObj, mirror = false) {
   const formData = new FormData();
   Object.entries(filesObj).forEach(([view, file]) =>
     formData.append(view, file, `${view}.jpg`)
   );
+  formData.append('mirror', mirror ? '1' : '0');
   const res = await fetch(`${API_BASE}/init`, {
     method: 'POST', body: formData, headers: authHeaders()
   });
   return res.json();
 }
 
-export async function submitPlaque(filesObj) {
+export async function submitPlaque(filesObj, mirror = false) {
   const formData = new FormData();
   Object.entries(filesObj).forEach(([view, file]) =>
     formData.append(view, file, `${view}.jpg`)
   );
+  formData.append('mirror', mirror ? '1' : '0');
   const res = await fetch(`${API_BASE}/plaque`, {
     method: 'POST', body: formData, headers: authHeaders()
   });
