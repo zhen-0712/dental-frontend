@@ -329,9 +329,10 @@ function renderPlaqueToothChart(summary, toothData) {
 
 export function render3DViewer(mode) {
   const frame  = document.getElementById('viewer-frame');
-  const glbUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.glb' : 'custom_real_teeth.glb');
-  const objUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.obj' : 'custom_real_teeth.obj');
-
+  const _t = Date.now();
+  const glbUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.glb' : 'custom_real_teeth.glb') + '&t=' + _t;
+  const objUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.obj' : 'custom_real_teeth.obj') + '&t=' + _t;
+  
   frame.innerHTML = '';
   const mv = document.createElement('model-viewer');
   mv.setAttribute('src', glbUrl);
