@@ -2,7 +2,7 @@
 import { renderTrendSection } from './trend.js';
 import { setupAllPhotoChecks } from './photo_check.js';
 import { generateReport } from './report.js';
-import { fetchModelStatus, fetchToothData, fetchPlaqueStats, fetchPlaqueRegions, submitInit, submitPlaque, submitInitMulti, submitPlaqueMulti, fetchTaskStatus } from './api.js';
+import { fetchModelStatus, fetchToothData, fetchPlaqueStats, fetchPlaqueRegions, submitInit, submitPlaque, submitInitMulti, fetchTaskStatus } from './api.js';
 import { setupUploads, switchUploadMode, VIEWS } from './upload.js';
 import { showProgress, updateProgress, fadeOutProgress } from './progress.js';
 import { showResultSection, switchModel, render3DViewer } from './result.js';
@@ -29,8 +29,7 @@ const state = {
   hasPlaque:    false,
   mirrorInit:   false,
   mirrorPlaque: false,
-  initUploadMode:   'single',  // 'single' | 'multi'
-  plaqueUploadMode: 'single',
+  initUploadMode: 'single',  // 'single' | 'multi'
 };
 
 // ===== 暴露全域供 HTML onclick =====
@@ -62,19 +61,6 @@ window.setInitUploadMode = function(mode) {
   }
 };
 
-window.setPlaqueUploadMode = function(mode) {
-  state.plaqueUploadMode = mode;
-  switchUploadMode('plaque', plaqueFiles, 'btn-plaque', mode);
-  document.getElementById('plaque-mode-single')?.classList.toggle('active', mode === 'single');
-  document.getElementById('plaque-mode-multi')?.classList.toggle('active',  mode === 'multi');
-  const hint = document.getElementById('plaque-upload-mode-hint');
-  if (hint) {
-    hint.textContent = mode === 'multi'
-      ? '每個角度可上傳多張，辨識結果取聯集以提高準確率'
-      : '每個角度上傳一張照片';
-    hint.classList.toggle('multi-on', mode === 'multi');
-  }
-};
 
 window.setMirrorInit = function(val) {
   state.mirrorInit = val;
@@ -178,9 +164,7 @@ async function startPlaque() {
   document.getElementById('btn-plaque').disabled = true;
   showProgress('plaque');
   try {
-    const data = state.plaqueUploadMode === 'multi'
-      ? await submitPlaqueMulti(plaqueFiles, state.mirrorPlaque)
-      : await submitPlaque(plaqueFiles, state.mirrorPlaque);
+    const data = await submitPlaque(plaqueFiles, state.mirrorPlaque);
     if (!data?.task_id) { showError(data?.detail || '提交失敗，請重試'); return; }
     state.taskId = data.task_id;
     poll();

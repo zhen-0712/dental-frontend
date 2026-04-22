@@ -97,18 +97,6 @@ export async function submitInitMulti(filesObj, mirror = false) {
   return res.json();
 }
 
-export async function submitPlaqueMulti(filesObj, mirror = false) {
-  const formData = new FormData();
-  Object.entries(filesObj).forEach(([view, files]) => {
-    const arr = Array.isArray(files) ? files : [files];
-    arr.forEach((file, i) => formData.append(`${view}_${i}`, file, `${view}_${i}.jpg`));
-  });
-  formData.append('mirror', mirror ? '1' : '0');
-  const res = await fetch(`${API_BASE}/plaque_multi`, {
-    method: 'POST', body: formData, headers: authHeaders()
-  });
-  return res.json();
-}
 
 export async function fetchTaskStatus(taskId) {
   const res = await fetch(`${API_BASE}/status/${taskId}`);
