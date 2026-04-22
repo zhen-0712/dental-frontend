@@ -2,8 +2,8 @@
 import { renderTrendSection } from './trend.js';
 import { setupAllPhotoChecks } from './photo_check.js';
 import { generateReport } from './report.js';
-import { fetchModelStatus, fetchToothData, fetchPlaqueStats, fetchPlaqueRegions, submitInit, submitPlaque, fetchTaskStatus } from './api.js';
-import { setupUploads, VIEWS } from './upload.js';
+import { fetchModelStatus, fetchToothData, fetchPlaqueStats, fetchPlaqueRegions, submitInit, submitPlaque, submitInitMulti, submitPlaqueMulti, fetchTaskStatus } from './api.js';
+import { setupUploads, switchUploadMode, VIEWS } from './upload.js';
 import { showProgress, updateProgress, fadeOutProgress } from './progress.js';
 import { showResultSection, switchModel, render3DViewer } from './result.js';
 import {
@@ -29,6 +29,8 @@ const state = {
   hasPlaque:    false,
   mirrorInit:   false,
   mirrorPlaque: false,
+  initUploadMode:   'single',  // 'single' | 'multi'
+  plaqueUploadMode: 'single',
 };
 
 // ===== 暴露全域供 HTML onclick =====
@@ -45,6 +47,34 @@ window.onMonthSelect      = onMonthSelect;
 window.scrollToHistory    = scrollToHistory;
 window.toggleHfDropdown   = toggleHfDropdown;
 window.selectHfItem       = selectHfItem;
+
+window.setInitUploadMode = function(mode) {
+  state.initUploadMode = mode;
+  switchUploadMode('init', initFiles, 'btn-init', mode);
+  document.getElementById('init-mode-single')?.classList.toggle('active', mode === 'single');
+  document.getElementById('init-mode-multi')?.classList.toggle('active',  mode === 'multi');
+  const hint = document.getElementById('init-upload-mode-hint');
+  if (hint) {
+    hint.textContent = mode === 'multi'
+      ? '每個角度可上傳多張，辨識結果取聯集以提高準確率'
+      : '每個角度上傳一張照片';
+    hint.classList.toggle('multi-on', mode === 'multi');
+  }
+};
+
+window.setPlaqueUploadMode = function(mode) {
+  state.plaqueUploadMode = mode;
+  switchUploadMode('plaque', plaqueFiles, 'btn-plaque', mode);
+  document.getElementById('plaque-mode-single')?.classList.toggle('active', mode === 'single');
+  document.getElementById('plaque-mode-multi')?.classList.toggle('active',  mode === 'multi');
+  const hint = document.getElementById('plaque-upload-mode-hint');
+  if (hint) {
+    hint.textContent = mode === 'multi'
+      ? '每個角度可上傳多張，辨識結果取聯集以提高準確率'
+      : '每個角度上傳一張照片';
+    hint.classList.toggle('multi-on', mode === 'multi');
+  }
+};
 
 window.setMirrorInit = function(val) {
   state.mirrorInit = val;
@@ -133,7 +163,10 @@ async function startInit() {
   document.getElementById('btn-init').disabled = true;
   showProgress('init');
   try {
-    const data = await submitInit(initFiles, state.mirrorInit);
+    const data = state.initUploadMode === 'multi'
+      ? await submitInitMulti(initFiles, state.mirrorInit)
+      : await submitInit(initFiles, state.mirrorInit);
+    if (!data?.task_id) { showError(data?.detail || '提交失敗，請重試'); return; }
     state.taskId = data.task_id;
     poll();
   } catch { showError('無法連接伺服器'); }
@@ -145,7 +178,10 @@ async function startPlaque() {
   document.getElementById('btn-plaque').disabled = true;
   showProgress('plaque');
   try {
-    const data = await submitPlaque(plaqueFiles, state.mirrorPlaque);
+    const data = state.plaqueUploadMode === 'multi'
+      ? await submitPlaqueMulti(plaqueFiles, state.mirrorPlaque)
+      : await submitPlaque(plaqueFiles, state.mirrorPlaque);
+    if (!data?.task_id) { showError(data?.detail || '提交失敗，請重試'); return; }
     state.taskId = data.task_id;
     poll();
   } catch { showError('無法連接伺服器'); }

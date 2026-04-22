@@ -102,3 +102,110 @@
 .camera-mode-hint.mirror-on {
   color: var(--aqua);
 }
+
+/* ===== Clear button (移除照片) ===== */
+.upload-clear-btn {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(30,30,30,0.55);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 12;
+  border: none;
+  padding: 0;
+  transition: background 0.18s;
+  backdrop-filter: blur(2px);
+}
+.upload-clear-btn:hover {
+  background: rgba(192,57,43,0.85);
+}
+
+/* ===== Upload Mode Toggle (手機拍照 / 多張照片) ===== */
+.upload-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.upload-mode-toggle {
+  display: flex;
+  background: rgba(3,105,94,0.07);
+  border-radius: var(--radius-xl);
+  padding: 3px;
+}
+
+.upload-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.38rem 1.1rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.upload-mode-btn.active {
+  background: var(--jade);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(3,105,94,0.25);
+}
+
+.upload-mode-btn:not(.active):hover {
+  color: var(--jade);
+}
+
+.upload-mode-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+
+.upload-mode-hint.multi-on {
+  color: var(--aqua);
+}
+
+/* ===== Multi-photo count badge ===== */
+.multi-count-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--jade);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  z-index: 10;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(3,105,94,0.3);
+}
+
+/* Multi mode: zone shows stacked effect */
+.upload-zone.multi-mode.has-file {
+  border-color: var(--aqua);
+}
+.upload-zone.multi-mode.has-file::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1.5px solid rgba(3,105,94,0.2);
+  border-radius: calc(var(--radius-md) - 2px);
+  pointer-events: none;
+}
