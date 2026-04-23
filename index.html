@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="static/css/auth.css">
 <link rel="stylesheet" href="static/css/history.css">
     <link rel="stylesheet" href="static/css/trend.css">
+<link rel="stylesheet" href="static/css/responsive.css">
 <script type="module" src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer.min.js"></script>
 </head>
 <body>
@@ -37,7 +38,23 @@
       <a href="#history" class="nav-link" onclick="window.scrollToHistory(event)">歷史</a>
       <a href="#about" class="nav-link">說明</a>
     </nav>
-    <div id="nav-user-area"></div>
+    <div class="header-right">
+      <div id="nav-user-area"></div>
+      <button class="nav-toggle" id="nav-toggle" aria-label="開啟選單" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
+    <div class="mobile-nav-inner">
+      <a href="#init" class="mobile-nav-link">初始化</a>
+      <a href="#plaque" class="mobile-nav-link">菌斑分析</a>
+      <a href="#result" class="mobile-nav-link">結果</a>
+      <a href="#history" class="mobile-nav-link">歷史</a>
+      <a href="#about" class="mobile-nav-link">說明</a>
+    </div>
   </div>
 </header>
 
@@ -420,5 +437,25 @@
 </footer>
 
 <script type="module" src="static/js/main.js"></script>
+<script>
+(function() {
+  const toggle = document.getElementById('nav-toggle');
+  const menu   = document.getElementById('mobile-nav');
+  toggle.addEventListener('click', function() {
+    const open = toggle.classList.toggle('open');
+    menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open);
+    menu.setAttribute('aria-hidden', !open);
+  });
+  menu.querySelectorAll('a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      toggle.classList.remove('open');
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+      menu.setAttribute('aria-hidden', 'true');
+    });
+  });
+})();
+</script>
 </body>
 </html>
