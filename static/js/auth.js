@@ -2,8 +2,8 @@
 import { API_BASE } from './api.js';
 import { fetchAnalyses } from './history.js';
 
-const TOKEN_KEY = 'dentalvis_token';
-const USER_KEY  = 'dentalvis_user';
+const TOKEN_KEY = 'smileguardian_token';
+const USER_KEY  = 'smileguardian_user';
 
 // ===== Token 管理 =====
 export function getToken()  { return localStorage.getItem(TOKEN_KEY); }
@@ -73,7 +73,7 @@ export function showAuthModal(defaultTab = 'login') {
       <button class="auth-close" onclick="document.getElementById('auth-overlay').remove()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <h2 class="auth-modal-title">DentalVis</h2>
+      <h2 class="auth-modal-title">Smile Guardian</h2>
       <p class="auth-modal-sub">牙齒健康分析系統</p>
 
       <div class="auth-tabs">

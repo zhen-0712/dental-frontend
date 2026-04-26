@@ -2,14 +2,14 @@
 const API_BASE = 'http://140.115.51.163:40111';
 
 export async function fetchModelStatus() {
-  const token = localStorage.getItem('dentalvis_token');
+  const token = localStorage.getItem('smileguardian_token');
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const res = await fetch(`${API_BASE}/model_status`, { headers });
   return res.json();
 }
 
 export async function fetchToothData() {
-  const token = localStorage.getItem('dentalvis_token');
+  const token = localStorage.getItem('smileguardian_token');
   if (token) {
     try {
       const res = await fetch(`${API_BASE}/analyses`, {
@@ -28,7 +28,7 @@ export async function fetchToothData() {
 }
 
 export async function fetchPlaqueStats() {
-  const token = localStorage.getItem('dentalvis_token');
+  const token = localStorage.getItem('smileguardian_token');
   if (token) {
     try {
       const res = await fetch(`${API_BASE}/analyses`, {
@@ -56,7 +56,7 @@ export async function fetchPlaqueRegions() {
 }
 
 function authHeaders() {
-  const token = localStorage.getItem('dentalvis_token');
+  const token = localStorage.getItem('smileguardian_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -104,7 +104,7 @@ export async function fetchTaskStatus(taskId) {
 }
 
 export function getFileUrl(filename) {
-  const token = localStorage.getItem('dentalvis_token');
+  const token = localStorage.getItem('smileguardian_token');
   if (token) {
     return `${API_BASE}/files/${filename}?token=${token}`;
   }

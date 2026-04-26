@@ -197,7 +197,7 @@ function buildReportHTML(
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DentalVis 牙齒健康分析報告 ${dateStr}</title>
+<title>Smile Guardian 牙齒健康分析報告 ${dateStr}</title>
 <style>
   @page { size: A4; margin: 16mm 18mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -242,7 +242,7 @@ function buildReportHTML(
 <body>
 
 <div class="rpt-header">
-  <div><h1>DentalVis</h1><div class="sub">牙齒健康分析報告</div></div>
+  <div><h1>Smile Guardian</h1><div class="sub">牙齒健康分析報告</div></div>
   <div><div class="date">${dateStr}</div><div class="disc">僅供參考，請諮詢牙醫師</div></div>
 </div>
 
@@ -255,7 +255,7 @@ ${trendLowerSection}
 ${snapSection}
 
 <div class="rpt-footer">
-  DentalVis &nbsp;·&nbsp; ${dateStr} &nbsp;·&nbsp; 本報告僅供個人參考，實際診斷請諮詢專業牙醫師
+  Smile Guardian &nbsp;·&nbsp; ${dateStr} &nbsp;·&nbsp; 本報告僅供個人參考，實際診斷請諮詢專業牙醫師
 </div>
 
 </body>

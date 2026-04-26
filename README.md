@@ -1,4 +1,4 @@
-# DentalVis — Web Frontend
+# Smile Guardian — Web Frontend
 
 牙齒健康視覺化平台的網頁前端。使用者上傳五個角度的牙齒照片，後端 AI 建立個人化 3D 模型並標示牙菌斑位置。
 
