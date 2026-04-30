@@ -12,11 +12,26 @@ const PALETTE = [
   '#8e44ad','#2980b9','#27ae60','#d35400','#7f8c8d',
 ];
 
+// Piecewise Y scale — parameterised per chart type
+// overall: 0-50% → 80% height; detail: 0-10% → 80% height
+const Y_CFG_OVERALL = { split: 50, lowFrac: 0.80, ticks: [0, 10, 20, 30, 50, 100] };
+const Y_CFG_DETAIL  = { split: 10, lowFrac: 0.80, ticks: [0, 2,  5,  10, 100] };
+
+function piecewiseY(v, cH, cfg) {
+  const { split, lowFrac } = cfg;
+  if (v <= split)
+    return cH * (1 - (v / split) * lowFrac);
+  else
+    return cH * (1 - lowFrac) * (1 - (v - split) / (100 - split));
+}
+
 let trendAnalyses = [];
 let selectedFdis  = [];
 let chartCanvas   = null;
 let trendMode     = 'overall';   // 'overall' | 'detail'
 let overallFilter = 'all';       // 'all' | 'upper' | 'lower'
+let _animFrame    = null;
+let _trendObserver = null;
 
 // ===== 資料整理 =====
 function buildTrendData(analyses) {
@@ -35,31 +50,27 @@ function getAllFdiInData(records) {
   return [...set].sort((a, b) => a - b);
 }
 
-function getMaxPxAcrossAll(records) {
-  let max = 1;
-  records.forEach(r =>
-    Object.values(r.result.stats.fdi_plaque_summary).forEach(v => {
-      if (v.total_plaque_px > max) max = v.total_plaque_px;
-    })
-  );
-  return max;
+function getFdiPlaqueRatio(record, fdi) {
+  const info = record.result.stats.fdi_plaque_summary[String(fdi)];
+  if (!info) return 0;
+  const stats = record.result.stats;
+  const totalVerts = info.jaw === 'upper'
+    ? (stats.upper_vertices || stats.total_vertices / 2)
+    : (stats.lower_vertices || stats.total_vertices / 2);
+  return (info.hit_verts ?? 0) / totalVerts * 100;
 }
 
 // ===== Overall 模式資料 =====
 function getOverallValue(record, filter) {
-  if (filter === 'all') {
-    return (record.result.stats.plaque_ratio ?? 0) * 100;
-  }
-  const summary = record.result.stats.fdi_plaque_summary || {};
-  const jawFdiSet = new Set(filter === 'upper' ? ALL_UPPER : ALL_LOWER);
-  return Object.entries(summary)
-    .filter(([fdi]) => jawFdiSet.has(Number(fdi)))
-    .reduce((sum, [, info]) => sum + (info.total_plaque_px ?? 0), 0);
+  const stats = record.result.stats;
+  if (filter === 'all') return (stats.plaque_ratio ?? 0) * 100;
+  if (filter === 'upper') return (stats.upper_plaque_ratio ?? 0) * 100;
+  if (filter === 'lower') return (stats.lower_plaque_ratio ?? 0) * 100;
+  return 0;
 }
 
 function getOverallMax(records, filter) {
-  if (filter === 'all') return 100;
-  return Math.max(1, ...records.map(r => getOverallValue(r, filter)));
+  return 100;
 }
 
 // ===== Canvas 共用設定 =====
@@ -73,21 +84,30 @@ function initCanvas() {
   return { ctx, W, H, PAD: { top: 20, right: 20, bottom: 48, left: 52 } };
 }
 
-function drawGridAndAxes(ctx, W, H, PAD, n, records, maxY, yFmt) {
+function drawGridAndAxes(ctx, W, H, PAD, n, records, maxY, yFmt, yCfg) {
   const cW = W - PAD.left - PAD.right;
   const cH = H - PAD.top  - PAD.bottom;
 
-  // 格線 + Y 軸
+  // 格線 + Y 軸（分段刻度）
   ctx.strokeStyle = 'rgba(3,105,94,0.08)';
   ctx.lineWidth = 1;
-  for (let i = 0; i <= 4; i++) {
-    const y = PAD.top + cH * (1 - i / 4);
+  yCfg.ticks.forEach(tick => {
+    const y = PAD.top + piecewiseY(tick, cH, yCfg);
     ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cW, y); ctx.stroke();
     ctx.fillStyle = '#5a7068';
     ctx.font = '11px DM Sans, sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(yFmt(maxY * i / 4), PAD.left - 6, y + 4);
-  }
+    ctx.fillText(`${tick}%`, PAD.left - 6, y + 4);
+  });
+  // split 分界線（虛線）提示刻度切換
+  const ySplit = PAD.top + piecewiseY(yCfg.split, cH, yCfg);
+  ctx.save();
+  ctx.strokeStyle = 'rgba(3,105,94,0.20)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(PAD.left, ySplit); ctx.lineTo(PAD.left + cW, ySplit); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
 
   // X 軸日期
   ctx.fillStyle = '#5a7068';
@@ -105,32 +125,35 @@ function drawGridAndAxes(ctx, W, H, PAD, n, records, maxY, yFmt) {
 }
 
 // ===== Overall 折線圖 =====
-function drawOverallChart(records, filter) {
+function drawOverallChart(records, filter, progress = 1) {
   const init = initCanvas();
   if (!init) return;
   const { ctx, W, H, PAD } = init;
   const n = records.length;
-  const isRatio = filter === 'all';
   const maxY = getOverallMax(records, filter);
-  const yFmt = v => isRatio ? `${Math.round(v)}%` : (v >= 1000 ? `${(v/1000).toFixed(1)}k` : `${Math.round(v)}`);
-  const { cW, cH } = drawGridAndAxes(ctx, W, H, PAD, n, records, maxY, yFmt);
+  const yFmt = v => `${v.toFixed(1)}%`;
+  const { cW, cH } = drawGridAndAxes(ctx, W, H, PAD, n, records, maxY, yFmt, Y_CFG_OVERALL);
 
-  // Y 軸標籤
-  ctx.save();
-  ctx.translate(14, PAD.top + cH / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.textAlign = 'center';
+  // Y 軸標題（垂直堆疊字元，不旋轉）
   ctx.fillStyle = '#5a7068';
   ctx.font = '11px DM Sans, sans-serif';
-  ctx.fillText(isRatio ? '菌斑覆蓋率' : '菌斑像素量', 0, 0);
-  ctx.restore();
+  ctx.textAlign = 'center';
+  '菌斑覆蓋率'.split('').forEach((ch, i) => {
+    ctx.fillText(ch, 10, PAD.top + cH / 2 - 26 + i * 13);
+  });
 
   const points = records.map((r, i) => {
     const val = getOverallValue(r, filter);
     const x = PAD.left + (n === 1 ? cW / 2 : cW * i / (n - 1));
-    const y = PAD.top + cH * (1 - val / maxY);
+    const y = PAD.top + piecewiseY(val, cH, Y_CFG_OVERALL);
     return { x, y, val };
   });
+
+  // 動畫裁切：只顯示到 progress 對應的 X 位置
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(PAD.left, 0, cW * progress + 2, H);
+  ctx.clip();
 
   // 填色區域
   ctx.beginPath();
@@ -149,8 +172,13 @@ function drawOverallChart(records, filter) {
   points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
   ctx.stroke();
 
-  // 點 + 數值標籤
-  points.forEach(p => {
+  ctx.restore(); // 結束裁切
+
+  // 點 + 數值標籤（逐點隨動畫出現）
+  points.forEach((p, i) => {
+    const ptProg = n === 1 ? 0 : i / (n - 1);
+    if (ptProg > progress + 0.01) return;
+
     ctx.beginPath();
     ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
     ctx.fillStyle = AQUA;
@@ -167,11 +195,11 @@ function drawOverallChart(records, filter) {
 
   // 更新說明文字
   const note = document.getElementById('trend-note');
-  if (note) note.textContent = isRatio ? '縱軸為菌斑覆蓋率（數值越低代表改善越多）' : '縱軸為菌斑像素量（數值越低代表改善越多）';
+  if (note) note.textContent = '縱軸為菌斑覆蓋率 %（數值越低代表改善越多）';
 }
 
 // ===== Detail 折線圖 =====
-function drawDetailChart(records, fdis) {
+function drawDetailChart(records, fdis, progress = 1) {
   const init = initCanvas();
   if (!init) return;
   const { ctx, W, H, PAD } = init;
@@ -185,28 +213,32 @@ function drawDetailChart(records, fdis) {
     return;
   }
 
-  const maxPx = getMaxPxAcrossAll(records);
-  const yFmt = v => `${Math.round(v)}`;
-  const { cW, cH } = drawGridAndAxes(ctx, W, H, PAD, n, records, maxPx, yFmt);
+  const maxY = 100;
+  const yFmt = v => `${v.toFixed(1)}%`;
+  const { cW, cH } = drawGridAndAxes(ctx, W, H, PAD, n, records, maxY, yFmt, Y_CFG_DETAIL);
 
-  // Y 軸標籤
-  ctx.save();
-  ctx.translate(14, PAD.top + cH / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.textAlign = 'center';
+  // Y 軸標題（垂直堆疊字元，不旋轉）
   ctx.fillStyle = '#5a7068';
   ctx.font = '11px DM Sans, sans-serif';
-  ctx.fillText('菌斑像素量', 0, 0);
-  ctx.restore();
+  ctx.textAlign = 'center';
+  '菌斑覆蓋率'.split('').forEach((ch, i) => {
+    ctx.fillText(ch, 10, PAD.top + cH / 2 - 26 + i * 13);
+  });
 
   fdis.forEach((fdi, fi) => {
     const color = PALETTE[fi % PALETTE.length];
     const points = records.map((r, i) => {
-      const px = r.result.stats.fdi_plaque_summary[String(fdi)]?.total_plaque_px ?? 0;
+      const ratio = getFdiPlaqueRatio(r, fdi);
       const x = PAD.left + (n === 1 ? cW / 2 : cW * i / (n - 1));
-      const y = PAD.top + cH * (1 - px / maxPx);
+      const y = PAD.top + piecewiseY(ratio, cH, Y_CFG_DETAIL);
       return { x, y };
     });
+
+    // 裁切動畫線段
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(PAD.left, 0, cW * progress + 2, H);
+    ctx.clip();
 
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -215,7 +247,12 @@ function drawDetailChart(records, fdis) {
     points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
     ctx.stroke();
 
-    points.forEach(p => {
+    ctx.restore();
+
+    // 點逐一出現
+    points.forEach((p, i) => {
+      const ptProg = n === 1 ? 0 : i / (n - 1);
+      if (ptProg > progress + 0.01) return;
       ctx.beginPath();
       ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
       ctx.fillStyle = color;
@@ -227,7 +264,7 @@ function drawDetailChart(records, fdis) {
   });
 
   const note = document.getElementById('trend-note');
-  if (note) note.textContent = '縱軸為菌斑像素量（數值越低代表改善越多）';
+  if (note) note.textContent = '縱軸為菌斑覆蓋率 %（數值越低代表改善越多）';
 }
 
 // ===== 模式 Tabs =====
@@ -321,18 +358,41 @@ function renderLegend(fdis) {
   `).join('');
 }
 
+// ===== 動畫執行器 =====
+function runChartAnimation(drawFn) {
+  if (_animFrame) { cancelAnimationFrame(_animFrame); _animFrame = null; }
+  const DURATION = 700;
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min((now - start) / DURATION, 1);
+    const progress = 1 - Math.pow(1 - t, 3); // ease-out cubic
+    drawFn(progress);
+    if (t < 1) _animFrame = requestAnimationFrame(tick);
+    else _animFrame = null;
+  }
+  _animFrame = requestAnimationFrame(tick);
+}
+
 // ===== 刷新圖表 =====
-function refreshChart() {
+function refreshChart(animate = false) {
   const records = buildTrendData(trendAnalyses);
   window._trendSelectedFdis    = [...selectedFdis];
   window._trendMode            = trendMode;
   window._trendOverallFilter   = overallFilter;
 
   if (trendMode === 'overall') {
-    drawOverallChart(records, overallFilter);
+    if (animate) {
+      runChartAnimation(p => drawOverallChart(records, overallFilter, p));
+    } else {
+      drawOverallChart(records, overallFilter, 1);
+    }
   } else {
-    drawDetailChart(records, selectedFdis);
     renderLegend(selectedFdis);
+    if (animate) {
+      runChartAnimation(p => drawDetailChart(records, selectedFdis, p));
+    } else {
+      drawDetailChart(records, selectedFdis, 1);
+    }
   }
 }
 
@@ -359,13 +419,13 @@ window.setTrendMode = function(mode) {
   trendMode = mode;
   renderModeTabs();
   showModeControls();
-  refreshChart();
+  refreshChart(true);
 };
 
 window.setOverallFilter = function(filter) {
   overallFilter = filter;
   renderOverallControls();
-  refreshChart();
+  refreshChart(true);
 };
 
 window.toggleTrendFdi = function(fdi) {
@@ -458,7 +518,21 @@ export async function renderTrendSection(analyses) {
   renderOverallControls();
   renderFdiSelector(getAllFdiInData(records), getMissingFdis());
   showModeControls();
-  refreshChart();
+
+  // 先靜態繪製（確保內容存在），再用 IntersectionObserver 等用戶看到時才播動畫
+  refreshChart(false);
+
+  if (_trendObserver) { _trendObserver.disconnect(); _trendObserver = null; }
+  if (section && window.IntersectionObserver) {
+    _trendObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        refreshChart(true);
+        _trendObserver.disconnect();
+        _trendObserver = null;
+      }
+    }, { threshold: 0.3 });
+    _trendObserver.observe(section);
+  }
 }
 
 // ===== PDF 用：離屏渲染整體趨勢（全部）=====
