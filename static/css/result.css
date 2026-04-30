@@ -1,3 +1,60 @@
+/* ===== Plaque Timeline ===== */
+.plaque-timeline {
+  margin-top: 0.75rem;
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(3,105,94,0.12);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.ptl-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ptl-btn {
+  background: none;
+  border: 1px solid rgba(3,105,94,0.25);
+  border-radius: 50%;
+  width: 30px; height: 30px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--jade);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.ptl-btn:hover { background: rgba(3,105,94,0.08); }
+.ptl-btn.playing { background: var(--jade); color: #fff; border-color: var(--jade); }
+.ptl-date {
+  margin-left: auto;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--jade);
+  letter-spacing: 0.02em;
+}
+.ptl-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 2px 0;
+}
+.ptl-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(3,105,94,0.2);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  border: none;
+}
+.ptl-dot.active {
+  background: var(--jade);
+  transform: scale(1.35);
+}
+.ptl-dot:hover { background: rgba(3,105,94,0.5); }
+
 /* ===== Result Layout ===== */
 .result-main {
   display: grid;

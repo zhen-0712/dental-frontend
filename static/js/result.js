@@ -1,5 +1,6 @@
 // ===== result.js - 結果渲染 =====
-import { getFileUrl } from './api.js';
+import { getFileUrl, API_BASE } from './api.js';
+window._API_BASE = API_BASE;
 
 const ALL_TEETH_UPPER = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const ALL_TEETH_LOWER = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
@@ -327,12 +328,98 @@ function renderPlaqueToothChart(summary, toothData) {
     makeRow(ALL_TEETH_UPPER, '上') + makeRow(ALL_TEETH_LOWER, '下');
 }
 
+let _timelineTimer = null;
+let _timelineIdx   = 0;
+let _timelineItems = [];  // [{glb_url, date_label}]
+
+function setTimelineFrame(idx) {
+  _timelineIdx = idx;
+  const item = _timelineItems[idx];
+  if (!item) return;
+
+  // Swap model-viewer src without recreating element
+  const mv = document.querySelector('#viewer-frame model-viewer');
+  if (mv) mv.setAttribute('src', item.glbUrl);
+
+  // Update date label
+  const dateEl = document.getElementById('ptl-date');
+  if (dateEl) dateEl.textContent = item.label;
+
+  // Update dots
+  document.querySelectorAll('.ptl-dot').forEach((d, i) =>
+    d.classList.toggle('active', i === idx));
+}
+
+function stopTimeline() {
+  if (_timelineTimer) { clearInterval(_timelineTimer); _timelineTimer = null; }
+  const playBtn = document.getElementById('ptl-play');
+  if (playBtn) { playBtn.innerHTML = '&#9654;'; playBtn.classList.remove('playing'); }
+}
+
+function startTimeline() {
+  stopTimeline();
+  const playBtn = document.getElementById('ptl-play');
+  if (playBtn) { playBtn.innerHTML = '&#9646;&#9646;'; playBtn.classList.add('playing'); }
+  _timelineTimer = setInterval(() => {
+    const next = (_timelineIdx + 1) % _timelineItems.length;
+    setTimelineFrame(next);
+    if (next === 0) stopTimeline();  // stop after one full cycle
+  }, 2000);
+}
+
+export function renderPlaqueTimeline(analyses) {
+  const bar = document.getElementById('plaque-timeline');
+  if (!bar) return;
+
+  // Build sorted list of done plaque analyses with glb_url
+  const items = (analyses || [])
+    .filter(a => a.type === 'plaque' && a.status === 'done' && a.result?.glb_url)
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    .map(a => {
+      const d = new Date(a.created_at);
+      return {
+        glbUrl: a.result.glb_url.startsWith('http') ? a.result.glb_url
+          : (window._API_BASE || '') + a.result.glb_url,
+        label: `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`,
+      };
+    });
+
+  if (items.length < 2) { bar.classList.add('hidden'); return; }
+
+  stopTimeline();
+  _timelineItems = items;
+  _timelineIdx   = items.length - 1;  // start at latest
+
+  // Render dots
+  const dotsEl = document.getElementById('ptl-dots');
+  dotsEl.innerHTML = items.map((it, i) =>
+    `<button class="ptl-dot${i === _timelineIdx ? ' active' : ''}" title="${it.label}" data-idx="${i}"></button>`
+  ).join('');
+  dotsEl.querySelectorAll('.ptl-dot').forEach(d =>
+    d.addEventListener('click', () => { stopTimeline(); setTimelineFrame(Number(d.dataset.idx)); }));
+
+  document.getElementById('ptl-date').textContent = items[_timelineIdx].label;
+  document.getElementById('ptl-prev').onclick = () => { stopTimeline(); setTimelineFrame(Math.max(0, _timelineIdx - 1)); };
+  document.getElementById('ptl-next').onclick = () => { stopTimeline(); setTimelineFrame(Math.min(items.length - 1, _timelineIdx + 1)); };
+  document.getElementById('ptl-play').onclick = () => _timelineTimer ? stopTimeline() : startTimeline();
+
+  bar.classList.remove('hidden');
+}
+
+export function hidePlaqueTimeline() {
+  stopTimeline();
+  document.getElementById('plaque-timeline')?.classList.add('hidden');
+}
+
 export function render3DViewer(mode) {
   const frame  = document.getElementById('viewer-frame');
   const _t = Date.now();
   const glbUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.glb' : 'custom_real_teeth.glb') + '&t=' + _t;
   const objUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.obj' : 'custom_real_teeth.obj') + '&t=' + _t;
-  
+
+  // Hide timeline when switching away from plaque mode
+  if (mode !== 'plaque') hidePlaqueTimeline();
+
   frame.innerHTML = '';
   const mv = document.createElement('model-viewer');
   mv.setAttribute('src', glbUrl);
@@ -352,4 +439,7 @@ export function render3DViewer(mode) {
   frame.appendChild(mv);
   document.getElementById('btn-download-glb').href = glbUrl;
   document.getElementById('btn-download-obj').href = objUrl;
+
+  // Show timeline when in plaque mode
+  if (mode === 'plaque') renderPlaqueTimeline(window._analyses || []);
 }
