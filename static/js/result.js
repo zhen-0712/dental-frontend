@@ -330,22 +330,134 @@ function renderPlaqueToothChart(summary, toothData) {
 
 let _timelineTimer = null;
 let _timelineIdx   = 0;
-let _timelineItems = [];  // [{glb_url, date_label}]
+let _timelineItems = [];  // [{glbUrl, label}]
+
+async function downloadPlaqueGif() {
+  if (_timelineItems.length < 2) {
+    alert('需要至少 2 次歷史菌斑分析才能生成 GIF');
+    return;
+  }
+  // Use the visible main model-viewer — off-screen WebGL won't render
+  const mv = document.querySelector('#viewer-frame model-viewer');
+  if (!mv) { alert('找不到 3D 檢視器'); return; }
+
+  const btn = document.getElementById('ptl-gif');
+  const origHtml = btn ? btn.innerHTML : '';
+  const origSrc  = mv.getAttribute('src');
+
+  // Overlay to signal capture is in progress
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position:absolute;inset:0;background:rgba(255,255,255,0.55);
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.85rem;font-weight:600;color:var(--jade,#03695e);
+    border-radius:inherit;z-index:10;pointer-events:none;`;
+  overlay.id = 'gif-overlay';
+  const frame = document.getElementById('viewer-frame');
+  if (frame) { frame.style.position = 'relative'; frame.appendChild(overlay); }
+
+  const setStatus = (txt) => {
+    if (btn) btn.textContent = txt;
+    overlay.textContent = txt;
+  };
+
+  try {
+    if (btn) btn.disabled = true;
+    setStatus('準備中...');
+
+    const dataUrls = [];
+    for (let i = 0; i < _timelineItems.length; i++) {
+      setStatus(`截圖 ${i + 1} / ${_timelineItems.length}　${_timelineItems[i].label}`);
+
+      // Load GLB into the visible model-viewer
+      await new Promise((resolve) => {
+        const onLoad = () => { mv.removeEventListener('load', onLoad); mv.removeEventListener('error', onErr); resolve(); };
+        const onErr  = () => { mv.removeEventListener('load', onLoad); mv.removeEventListener('error', onErr); resolve(); }; // skip on error
+        mv.addEventListener('load', onLoad);
+        mv.addEventListener('error', onErr);
+        mv.setAttribute('src', _timelineItems[i].glbUrl);
+      });
+
+      // Wait for WebGL to finish rendering (requestAnimationFrame × 3 + buffer)
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))));
+      await new Promise(r => setTimeout(r, 600));
+
+      try {
+        const blob = await Promise.race([
+          mv.toBlob({ idealAspect: false }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('截圖超時')), 6000)),
+        ]);
+        const dataUrl = await new Promise(r => {
+          const reader = new FileReader();
+          reader.onload = e => r(e.target.result);
+          reader.readAsDataURL(blob);
+        });
+        dataUrls.push(dataUrl);
+      } catch (e) {
+        console.warn(`Frame ${i + 1} skipped:`, e.message);
+      }
+    }
+
+    if (dataUrls.length < 2) {
+      throw new Error(`只截到 ${dataUrls.length} 幀，無法生成 GIF`);
+    }
+
+    setStatus('上傳並合成 GIF...');
+    const token = localStorage.getItem('smileguardian_token');
+    const resp = await fetch(`${API_BASE}/generate_gif`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ frames: dataUrls, delay: 1000 }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || `Server 回傳 ${resp.status}`);
+    }
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `plaque_history_${new Date().toISOString().slice(0, 10)}.gif`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err) {
+    console.error('GIF 生成失敗:', err);
+    alert('GIF 生成失敗：' + err.message);
+  } finally {
+    // Restore original model and clean up
+    mv.setAttribute('src', origSrc);
+    overlay.remove();
+    if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+  }
+}
 
 function setTimelineFrame(idx) {
   _timelineIdx = idx;
   const item = _timelineItems[idx];
   if (!item) return;
 
-  // Swap model-viewer src without recreating element
   const mv = document.querySelector('#viewer-frame model-viewer');
-  if (mv) mv.setAttribute('src', item.glbUrl);
+  if (mv) {
+    // Remove previous error handler before setting new src
+    if (mv._tlErrHandler) mv.removeEventListener('error', mv._tlErrHandler);
+    mv._tlErrHandler = () => {
+      // File missing — auto-advance to next if playing, else just skip silently
+      if (_timelineTimer) {
+        const next = _timelineIdx + 1;
+        if (next < _timelineItems.length) setTimelineFrame(next);
+        else stopTimeline();
+      }
+    };
+    mv.addEventListener('error', mv._tlErrHandler);
+    mv.setAttribute('src', item.glbUrl);
+  }
 
-  // Update date label
   const dateEl = document.getElementById('ptl-date');
   if (dateEl) dateEl.textContent = item.label;
 
-  // Update dots
   document.querySelectorAll('.ptl-dot').forEach((d, i) =>
     d.classList.toggle('active', i === idx));
 }
@@ -367,22 +479,30 @@ function startTimeline() {
   }, 2000);
 }
 
-export function renderPlaqueTimeline(analyses) {
+export async function renderPlaqueTimeline(analyses) {
   const bar = document.getElementById('plaque-timeline');
   if (!bar) return;
 
-  // Build sorted list of done plaque analyses with glb_url
-  const items = (analyses || [])
-    .filter(a => a.type === 'plaque' && a.status === 'done' && a.result?.glb_url)
-    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-    .map(a => {
-      const d = new Date(a.created_at);
-      return {
-        glbUrl: a.result.glb_url.startsWith('http') ? a.result.glb_url
-          : (window._API_BASE || '') + a.result.glb_url,
-        label: `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`,
-      };
-    });
+  // Fetch from /plaque_models — server validates that GLB files actually exist on disk
+  let items = [];
+  try {
+    const token = localStorage.getItem('smileguardian_token');
+    if (token) {
+      const res = await fetch(`${API_BASE}/plaque_models`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        items = data.map(m => {
+          const base = m.glb_url.startsWith('http') ? m.glb_url : `${API_BASE}${m.glb_url}`;
+          return {
+            glbUrl: `${base}?token=${token}`,
+            label:  m.date.replace(/-/g, '/'),
+          };
+        });
+      }
+    }
+  } catch (_) { /* no timeline */ }
 
   if (items.length < 2) { bar.classList.add('hidden'); return; }
 
@@ -402,6 +522,8 @@ export function renderPlaqueTimeline(analyses) {
   document.getElementById('ptl-prev').onclick = () => { stopTimeline(); setTimelineFrame(Math.max(0, _timelineIdx - 1)); };
   document.getElementById('ptl-next').onclick = () => { stopTimeline(); setTimelineFrame(Math.min(items.length - 1, _timelineIdx + 1)); };
   document.getElementById('ptl-play').onclick = () => _timelineTimer ? stopTimeline() : startTimeline();
+  const gifBtn = document.getElementById('ptl-gif');
+  if (gifBtn) gifBtn.onclick = downloadPlaqueGif;
 
   bar.classList.remove('hidden');
 }
@@ -440,6 +562,6 @@ export function render3DViewer(mode) {
   document.getElementById('btn-download-glb').href = glbUrl;
   document.getElementById('btn-download-obj').href = objUrl;
 
-  // Show timeline when in plaque mode
+  // Show timeline when in plaque mode (async — fetches fresh analyses internally)
   if (mode === 'plaque') renderPlaqueTimeline(window._analyses || []);
 }

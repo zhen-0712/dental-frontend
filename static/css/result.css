@@ -54,6 +54,21 @@
   transform: scale(1.35);
 }
 .ptl-dot:hover { background: rgba(3,105,94,0.5); }
+.ptl-gif-btn {
+  display: flex; align-items: center; gap: 4px;
+  background: none;
+  border: 1px solid rgba(3,105,94,0.3);
+  border-radius: var(--radius-sm, 6px);
+  padding: 4px 9px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--jade);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+.ptl-gif-btn:hover { background: rgba(3,105,94,0.08); }
+.ptl-gif-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ===== Result Layout ===== */
 .result-main {
