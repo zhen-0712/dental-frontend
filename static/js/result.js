@@ -523,7 +523,7 @@ export async function renderPlaqueTimeline(analyses) {
   document.getElementById('ptl-next').onclick = () => { stopTimeline(); setTimelineFrame(Math.min(items.length - 1, _timelineIdx + 1)); };
   document.getElementById('ptl-play').onclick = () => _timelineTimer ? stopTimeline() : startTimeline();
   const gifBtn = document.getElementById('ptl-gif');
-  if (gifBtn) gifBtn.onclick = downloadPlaqueGif;
+  if (gifBtn) gifBtn.onclick = () => generate360Gif(gifBtn);
 
   bar.classList.remove('hidden');
 }
@@ -564,4 +564,59 @@ export function render3DViewer(mode) {
 
   // Show timeline when in plaque mode (async — fetches fresh analyses internally)
   if (mode === 'plaque') renderPlaqueTimeline(window._analyses || []);
+}
+
+// ==================== 360° GIF ====================
+export async function generate360Gif(btn) {
+  const token = localStorage.getItem('smileguardian_token');
+  if (!token) { alert('請先登入才能產生 360° GIF'); return; }
+
+  const origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ 生成中...';
+
+  try {
+    // 1. 觸發背景任務
+    const startRes = await fetch(`${API_BASE}/generate_360gif`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!startRes.ok) {
+      const err = await startRes.json().catch(() => ({}));
+      throw new Error(err.detail || '任務提交失敗');
+    }
+    const { task_id } = await startRes.json();
+
+    // 2. 輪詢狀態（最多 15 分鐘，支援多模型）
+    const deadline = Date.now() + 15 * 60 * 1000;
+    while (Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 3000));
+      const st = await fetch(`${API_BASE}/status/${task_id}`).then(r => r.json());
+      // step 可能是 "rendering (3/8)" 等動態字串
+      const staticLabel = { waiting:'排隊中', loading:'載入模型', saving:'儲存中' };
+      const label = staticLabel[st.step] ?? st.step;
+      btn.innerHTML = `⏳ ${label}...`;
+
+      if (st.status === 'done') {
+        // 3. 觸發下載
+        const gifUrl = `${API_BASE}${st.gif_url}?token=${token}`;
+        const a = document.createElement('a');
+        a.href = gifUrl;
+        a.download = 'teeth_360.gif';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        btn.innerHTML = '✓ 下載完成';
+        setTimeout(() => { btn.innerHTML = origHtml; btn.disabled = false; }, 3000);
+        return;
+      }
+      if (st.status === 'failed') throw new Error(st.error || '渲染失敗');
+    }
+    throw new Error('逾時（超過 15 分鐘）');
+
+  } catch (err) {
+    alert('360° GIF 生成失敗：' + err.message);
+    btn.innerHTML = origHtml;
+    btn.disabled = false;
+  }
 }
