@@ -5,7 +5,7 @@ import { generateReport } from './report.js';
 import { fetchModelStatus, fetchToothData, fetchPlaqueStats, fetchPlaqueRegions, submitInit, submitPlaque, submitInitMulti, fetchTaskStatus } from './api.js';
 import { setupUploads, switchUploadMode, VIEWS } from './upload.js';
 import { showProgress, updateProgress, fadeOutProgress } from './progress.js';
-import { showResultSection, switchModel, render3DViewer } from './result.js';
+import { showResultSection, switchModel, render3DViewer, switchToothMode } from './result.js';
 import {
   renderHeaderUser, showAuthModal, switchAuthTab,
   doLogin, doRegister, authLogout,
@@ -34,6 +34,7 @@ const state = {
 
 // ===== 暴露全域供 HTML onclick =====
 window.switchModel      = (mode) => switchModel(mode, state);
+window.switchToothMode  = switchToothMode;
 window.showAuthModal    = showAuthModal;
 window.switchAuthTab    = switchAuthTab;
 window.doLogin          = doLogin;

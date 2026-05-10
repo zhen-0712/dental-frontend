@@ -10,7 +10,6 @@ export function showResultSection(toothData, plaqueStats, state, plaqueRegions) 
   section.classList.remove('hidden');
   window._toothData     = toothData;
   window._plaqueRegions = plaqueRegions || null;
-
   const toggle = document.getElementById('model-toggle');
   if (state.hasBase && state.hasPlaque) {
     toggle.classList.remove('hidden');
@@ -45,27 +44,10 @@ function renderLeftPanel(toothData, plaqueStats, state, plaqueRegions) {
   document.getElementById('block-plaque').classList.add('hidden');
 
   if (toothData) {
-    document.getElementById('stat-total').textContent    = toothData.total_detected ?? '—';
-    document.getElementById('stat-missing').textContent  = (toothData.never_detected || []).length;
-    document.getElementById('stat-reliable').textContent = toothData.reliable_count ?? '—';
-    renderToothChart(toothData);
-
-    const missing = toothData.never_detected || [];
-    if (missing.length > 0) {
-      document.getElementById('missing-wrap').classList.remove('hidden');
-      document.getElementById('missing-list').innerHTML =
-        missing.map(t => `<span class="missing-badge">${t}</span>`).join('');
-    }
-    const suspects = [
-      ...(toothData.suspicious?.low_confidence || []),
-      ...(toothData.suspicious?.insufficient_views || []),
-    ];
-    if (suspects.length > 0) {
-      document.getElementById('suspicious-wrap').classList.remove('hidden');
-      document.getElementById('suspicious-list').innerHTML =
-        suspects.map(t => `<span class="suspect-badge">${t}</span>`).join('');
-    }
-
+    const displayData = _currentToothMode === 'teaching'
+      ? _makeTeachingOverride(toothData)
+      : toothData;
+    _renderToothInfo(displayData);
     renderToothAccuracy(toothData);
   }
 
@@ -533,11 +515,85 @@ export function hidePlaqueTimeline() {
   document.getElementById('plaque-timeline')?.classList.add('hidden');
 }
 
-export function render3DViewer(mode) {
+// ===== 假牙模型 / 正常牙齒 切換 =====
+const TEACHING_NEVER_DETECTED  = [18, 28, 31, 38, 47, 48];
+const TEACHING_LOW_CONFIDENCE  = [];
+let _currentToothMode = 'normal';   // 'normal' | 'teaching'
+
+function _makeTeachingOverride(td) {
+  const allTeeth = [...ALL_TEETH_UPPER, ...ALL_TEETH_LOWER];
+  return {
+    ...td,
+    never_detected: TEACHING_NEVER_DETECTED,
+    detected_teeth: allTeeth.filter(t => !TEACHING_NEVER_DETECTED.includes(t)),
+    suspicious: {
+      low_confidence: TEACHING_LOW_CONFIDENCE,
+      insufficient_views: [],
+      might_be_false: [],
+    },
+  };
+}
+
+export function switchToothMode(mode) {
+  _currentToothMode = mode;
+  document.getElementById('toggle-normal')?.classList.toggle('active', mode === 'normal');
+  document.getElementById('toggle-teaching')?.classList.toggle('active', mode === 'teaching');
+
+  const td = window._toothData;
+  if (!td) return;
+
+  if (mode === 'teaching') {
+    _renderToothInfo(_makeTeachingOverride(td));
+    render3DViewer('base', 'teaching');
+  } else {
+    _renderToothInfo(td);
+    render3DViewer('base', 'normal');
+  }
+}
+
+function _renderToothInfo(toothData) {
+  document.getElementById('stat-total').textContent    = toothData.total_detected ?? '—';
+  document.getElementById('stat-missing').textContent  = (toothData.never_detected || []).length;
+  document.getElementById('stat-reliable').textContent = toothData.reliable_count ?? '—';
+  renderToothChart(toothData);
+
+  const missing = toothData.never_detected || [];
+  const mWrap = document.getElementById('missing-wrap');
+  if (missing.length > 0) {
+    mWrap.classList.remove('hidden');
+    document.getElementById('missing-list').innerHTML =
+      missing.map(t => `<span class="missing-badge">${t}</span>`).join('');
+  } else {
+    mWrap.classList.add('hidden');
+  }
+
+  const suspects = [
+    ...(toothData.suspicious?.low_confidence || []),
+    ...(toothData.suspicious?.insufficient_views || []),
+  ];
+  const sWrap = document.getElementById('suspicious-wrap');
+  if (suspects.length > 0) {
+    sWrap.classList.remove('hidden');
+    document.getElementById('suspicious-list').innerHTML =
+      suspects.map(t => `<span class="suspect-badge">${t}</span>`).join('');
+  } else {
+    sWrap.classList.add('hidden');
+  }
+}
+
+export function render3DViewer(mode, toothMode) {
   const frame  = document.getElementById('viewer-frame');
   const _t = Date.now();
-  const glbUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.glb' : 'custom_real_teeth.glb') + '&t=' + _t;
-  const objUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.obj' : 'custom_real_teeth.obj') + '&t=' + _t;
+  // toothMode 決定哪個牙齒模型檔案；mode 決定是否是菌斑模型
+  const resolvedToothMode = toothMode ?? _currentToothMode;
+  const baseGlb = resolvedToothMode === 'teaching'
+    ? 'custom_real_teeth_teaching.glb'
+    : 'custom_real_teeth.glb';
+  const baseObj = resolvedToothMode === 'teaching'
+    ? 'custom_real_teeth_teaching.obj'
+    : 'custom_real_teeth.obj';
+  const glbUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.glb' : baseGlb) + '&t=' + _t;
+  const objUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.obj' : baseObj) + '&t=' + _t;
 
   // Hide timeline when switching away from plaque mode
   if (mode !== 'plaque') hidePlaqueTimeline();
