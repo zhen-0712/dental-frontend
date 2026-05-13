@@ -37,13 +37,19 @@ export async function fetchPlaqueStats() {
       if (res.ok) {
         const analyses = await res.json();
         const lastPlaque = analyses.find(a => a.type === 'plaque' && a.status === 'done' && a.result?.stats);
-        if (lastPlaque) return lastPlaque.result.stats;
+        if (lastPlaque) {
+          const stats = lastPlaque.result.stats;
+          stats.__glbUrl = lastPlaque.result.glb_url || '/files/plaque_by_fdi.glb';
+          return stats;
+        }
       }
     } catch(e) {}
   }
   const res = await fetch(`${API_BASE}/files/plaque_by_fdi_stats.json`);
   if (!res.ok) return null;
-  return res.json();
+  const stats = await res.json();
+  stats.__glbUrl = '/files/plaque_by_fdi.glb';
+  return stats;
 }
 
 // ===== 新增：取得 plaque_regions.json（供準確度評估用）=====
@@ -72,12 +78,13 @@ export async function submitInit(filesObj, mirror = false) {
   return res.json();
 }
 
-export async function submitPlaque(filesObj, mirror = false) {
+export async function submitPlaque(filesObj, mirror = false, teaching = false) {
   const formData = new FormData();
   Object.entries(filesObj).forEach(([view, file]) =>
     formData.append(view, file, `${view}.jpg`)
   );
-  formData.append('mirror', mirror ? '1' : '0');
+  formData.append('mirror',   mirror   ? '1' : '0');
+  formData.append('teaching', teaching ? '1' : '0');
   const res = await fetch(`${API_BASE}/plaque`, {
     method: 'POST', body: formData, headers: authHeaders()
   });

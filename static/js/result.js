@@ -39,6 +39,11 @@ export function switchModel(mode, state) {
   render3DViewer(mode);
 }
 
+function _isPlaqueTeaching() {
+  const name = window._plaqueGlbName || '';
+  return name.includes('teaching') || /_t\.glb$/.test(name);
+}
+
 function renderLeftPanel(toothData, plaqueStats, state, plaqueRegions) {
   document.getElementById('block-init').classList.add('hidden');
   document.getElementById('block-plaque').classList.add('hidden');
@@ -56,7 +61,9 @@ function renderLeftPanel(toothData, plaqueStats, state, plaqueRegions) {
     document.getElementById('stat-ratio').textContent =
       plaqueStats.plaque_ratio != null ? `${(plaqueStats.plaque_ratio * 100).toFixed(1)}%` : '—';
     document.getElementById('stat-plaque-teeth').textContent = Object.keys(summary).length;
-    renderPlaqueToothChart(summary, toothData);
+    // 假牙模式：菌斑圖表只套用假牙缺牙清單，不與 SAT 結果聯集
+    const plaqueDisplayData = _isPlaqueTeaching() ? _makeTeachingOverride(toothData) : toothData;
+    renderPlaqueToothChart(summary, plaqueDisplayData);
 
     renderPlaqueAccuracy(plaqueStats, plaqueRegions);
   }
@@ -516,7 +523,7 @@ export function hidePlaqueTimeline() {
 }
 
 // ===== 假牙模型 / 正常牙齒 切換 =====
-const TEACHING_NEVER_DETECTED  = [18, 28, 31, 38, 47, 48];
+const TEACHING_NEVER_DETECTED  = [18, 28, 31, 38, 46, 48];
 const TEACHING_LOW_CONFIDENCE  = [];
 let _currentToothMode = 'normal';   // 'normal' | 'teaching'
 
@@ -592,8 +599,10 @@ export function render3DViewer(mode, toothMode) {
   const baseObj = resolvedToothMode === 'teaching'
     ? 'custom_real_teeth_teaching.obj'
     : 'custom_real_teeth.obj';
-  const glbUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.glb' : baseGlb) + '&t=' + _t;
-  const objUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.obj' : baseObj) + '&t=' + _t;
+  const plaqueGlb = window._plaqueGlbName || 'plaque_by_fdi.glb';
+  const plaqueObj = plaqueGlb.replace('.glb', '.obj');
+  const glbUrl = getFileUrl(mode === 'plaque' ? plaqueGlb : baseGlb) + '&t=' + _t;
+  const objUrl = getFileUrl(mode === 'plaque' ? plaqueObj : baseObj) + '&t=' + _t;
 
   // Hide timeline when switching away from plaque mode
   if (mode !== 'plaque') hidePlaqueTimeline();
