@@ -53,7 +53,8 @@ async function snapPlaqueAllAngles(btn) {
   if (!frame) return [];
 
   const { getFileUrl } = await import('./api.js');
-  const glbUrl = getFileUrl('plaque_by_fdi.glb');
+  const plaqueGlb = window._plaqueGlbName || 'plaque_by_fdi.glb';
+  const glbUrl = getFileUrl(plaqueGlb);
   const mv = frame.querySelector('model-viewer');
   if (!mv) return [];
 
@@ -93,7 +94,8 @@ function restoreViewer() {
     const mv = document.querySelector('#viewer-frame model-viewer');
     if (!mv) return;
     import('./api.js').then(({ getFileUrl }) => {
-      mv.setAttribute('src', getFileUrl('plaque_by_fdi.glb'));
+      const plaqueGlb = window._plaqueGlbName || 'plaque_by_fdi.glb';
+      mv.setAttribute('src', getFileUrl(plaqueGlb));
       mv.setAttribute('auto-rotate', '');
       mv.removeAttribute('camera-orbit');
       mv.removeAttribute('field-of-view');
