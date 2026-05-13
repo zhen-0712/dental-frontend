@@ -5,7 +5,7 @@ import { generateReport } from './report.js';
 import { fetchModelStatus, fetchToothData, fetchPlaqueStats, fetchPlaqueRegions, submitInit, submitPlaque, submitInitMulti, fetchTaskStatus } from './api.js';
 import { setupUploads, switchUploadMode, VIEWS } from './upload.js';
 import { showProgress, updateProgress, fadeOutProgress } from './progress.js';
-import { showResultSection, switchModel, render3DViewer } from './result.js';
+import { showResultSection, switchModel, render3DViewer, switchToothMode } from './result.js';
 import {
   renderHeaderUser, showAuthModal, switchAuthTab,
   doLogin, doRegister, authLogout,
@@ -21,19 +21,21 @@ import {
 const initFiles   = {};
 const plaqueFiles = {};
 const state = {
-  taskId:       null,
-  pollTimer:    null,
-  currentMode:  null,
-  currentModel: 'base',
-  hasBase:      false,
-  hasPlaque:    false,
-  mirrorInit:   false,
-  mirrorPlaque: false,
-  initUploadMode: 'single',  // 'single' | 'multi'
+  taskId:            null,
+  pollTimer:         null,
+  currentMode:       null,
+  currentModel:      'base',
+  hasBase:           false,
+  hasPlaque:         false,
+  mirrorInit:        false,
+  mirrorPlaque:      false,
+  initUploadMode:    'single',   // 'single' | 'multi'
+  plaqueTeachingMode: 'normal',  // 'normal' | 'teaching'
 };
 
 // ===== 暴露全域供 HTML onclick =====
 window.switchModel      = (mode) => switchModel(mode, state);
+window.switchToothMode  = switchToothMode;
 window.showAuthModal    = showAuthModal;
 window.switchAuthTab    = switchAuthTab;
 window.doLogin          = doLogin;
@@ -73,6 +75,12 @@ window.setMirrorInit = function(val) {
       : '前置相機，左右方向已正確';
     hint.classList.toggle('mirror-on', val);
   }
+};
+
+window.setPlaqueToothMode = function(mode) {
+  state.plaqueTeachingMode = mode;
+  document.getElementById('plaque-toggle-normal')?.classList.toggle('active', mode === 'normal');
+  document.getElementById('plaque-toggle-teaching')?.classList.toggle('active', mode === 'teaching');
 };
 
 window.setMirrorPlaque = function(val) {
@@ -128,7 +136,11 @@ async function loadExistingData() {
   try { toothData = await fetchToothData(); } catch {}
   try {
     plaqueStats = await fetchPlaqueStats();
-    if (plaqueStats) state.hasPlaque = true;
+    if (plaqueStats) {
+      state.hasPlaque = true;
+      const glbUrl = plaqueStats.__glbUrl || '/files/plaque_by_fdi.glb';
+      window._plaqueGlbName = glbUrl.split('/').pop().split('?')[0];
+    }
   } catch {}
   try { plaqueRegions = await fetchPlaqueRegions(); } catch {}
 
@@ -164,7 +176,8 @@ async function startPlaque() {
   document.getElementById('btn-plaque').disabled = true;
   showProgress('plaque');
   try {
-    const data = await submitPlaque(plaqueFiles, state.mirrorPlaque);
+    const teaching = state.plaqueTeachingMode === 'teaching';
+    const data = await submitPlaque(plaqueFiles, state.mirrorPlaque, teaching);
     if (!data?.task_id) { showError(data?.detail || '提交失敗，請重試'); return; }
     state.taskId = data.task_id;
     poll();

@@ -10,7 +10,6 @@ export function showResultSection(toothData, plaqueStats, state, plaqueRegions) 
   section.classList.remove('hidden');
   window._toothData     = toothData;
   window._plaqueRegions = plaqueRegions || null;
-
   const toggle = document.getElementById('model-toggle');
   if (state.hasBase && state.hasPlaque) {
     toggle.classList.remove('hidden');
@@ -40,32 +39,20 @@ export function switchModel(mode, state) {
   render3DViewer(mode);
 }
 
+function _isPlaqueTeaching() {
+  const name = window._plaqueGlbName || '';
+  return name.includes('teaching') || /_t\.glb$/.test(name);
+}
+
 function renderLeftPanel(toothData, plaqueStats, state, plaqueRegions) {
   document.getElementById('block-init').classList.add('hidden');
   document.getElementById('block-plaque').classList.add('hidden');
 
   if (toothData) {
-    document.getElementById('stat-total').textContent    = toothData.total_detected ?? '—';
-    document.getElementById('stat-missing').textContent  = (toothData.never_detected || []).length;
-    document.getElementById('stat-reliable').textContent = toothData.reliable_count ?? '—';
-    renderToothChart(toothData);
-
-    const missing = toothData.never_detected || [];
-    if (missing.length > 0) {
-      document.getElementById('missing-wrap').classList.remove('hidden');
-      document.getElementById('missing-list').innerHTML =
-        missing.map(t => `<span class="missing-badge">${t}</span>`).join('');
-    }
-    const suspects = [
-      ...(toothData.suspicious?.low_confidence || []),
-      ...(toothData.suspicious?.insufficient_views || []),
-    ];
-    if (suspects.length > 0) {
-      document.getElementById('suspicious-wrap').classList.remove('hidden');
-      document.getElementById('suspicious-list').innerHTML =
-        suspects.map(t => `<span class="suspect-badge">${t}</span>`).join('');
-    }
-
+    const displayData = _currentToothMode === 'teaching'
+      ? _makeTeachingOverride(toothData)
+      : toothData;
+    _renderToothInfo(displayData);
     renderToothAccuracy(toothData);
   }
 
@@ -74,7 +61,9 @@ function renderLeftPanel(toothData, plaqueStats, state, plaqueRegions) {
     document.getElementById('stat-ratio').textContent =
       plaqueStats.plaque_ratio != null ? `${(plaqueStats.plaque_ratio * 100).toFixed(1)}%` : '—';
     document.getElementById('stat-plaque-teeth').textContent = Object.keys(summary).length;
-    renderPlaqueToothChart(summary, toothData);
+    // 假牙模式：菌斑圖表只套用假牙缺牙清單，不與 SAT 結果聯集
+    const plaqueDisplayData = _isPlaqueTeaching() ? _makeTeachingOverride(toothData) : toothData;
+    renderPlaqueToothChart(summary, plaqueDisplayData);
 
     renderPlaqueAccuracy(plaqueStats, plaqueRegions);
   }
@@ -533,11 +522,87 @@ export function hidePlaqueTimeline() {
   document.getElementById('plaque-timeline')?.classList.add('hidden');
 }
 
-export function render3DViewer(mode) {
+// ===== 假牙模型 / 正常牙齒 切換 =====
+const TEACHING_NEVER_DETECTED  = [18, 28, 31, 38, 46, 48];
+const TEACHING_LOW_CONFIDENCE  = [];
+let _currentToothMode = 'normal';   // 'normal' | 'teaching'
+
+function _makeTeachingOverride(td) {
+  const allTeeth = [...ALL_TEETH_UPPER, ...ALL_TEETH_LOWER];
+  return {
+    ...td,
+    never_detected: TEACHING_NEVER_DETECTED,
+    detected_teeth: allTeeth.filter(t => !TEACHING_NEVER_DETECTED.includes(t)),
+    suspicious: {
+      low_confidence: TEACHING_LOW_CONFIDENCE,
+      insufficient_views: [],
+      might_be_false: [],
+    },
+  };
+}
+
+export function switchToothMode(mode) {
+  _currentToothMode = mode;
+  document.getElementById('toggle-normal')?.classList.toggle('active', mode === 'normal');
+  document.getElementById('toggle-teaching')?.classList.toggle('active', mode === 'teaching');
+
+  const td = window._toothData;
+  if (!td) return;
+
+  if (mode === 'teaching') {
+    _renderToothInfo(_makeTeachingOverride(td));
+    render3DViewer('base', 'teaching');
+  } else {
+    _renderToothInfo(td);
+    render3DViewer('base', 'normal');
+  }
+}
+
+function _renderToothInfo(toothData) {
+  document.getElementById('stat-total').textContent    = toothData.total_detected ?? '—';
+  document.getElementById('stat-missing').textContent  = (toothData.never_detected || []).length;
+  document.getElementById('stat-reliable').textContent = toothData.reliable_count ?? '—';
+  renderToothChart(toothData);
+
+  const missing = toothData.never_detected || [];
+  const mWrap = document.getElementById('missing-wrap');
+  if (missing.length > 0) {
+    mWrap.classList.remove('hidden');
+    document.getElementById('missing-list').innerHTML =
+      missing.map(t => `<span class="missing-badge">${t}</span>`).join('');
+  } else {
+    mWrap.classList.add('hidden');
+  }
+
+  const suspects = [
+    ...(toothData.suspicious?.low_confidence || []),
+    ...(toothData.suspicious?.insufficient_views || []),
+  ];
+  const sWrap = document.getElementById('suspicious-wrap');
+  if (suspects.length > 0) {
+    sWrap.classList.remove('hidden');
+    document.getElementById('suspicious-list').innerHTML =
+      suspects.map(t => `<span class="suspect-badge">${t}</span>`).join('');
+  } else {
+    sWrap.classList.add('hidden');
+  }
+}
+
+export function render3DViewer(mode, toothMode) {
   const frame  = document.getElementById('viewer-frame');
   const _t = Date.now();
-  const glbUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.glb' : 'custom_real_teeth.glb') + '&t=' + _t;
-  const objUrl = getFileUrl(mode === 'plaque' ? 'plaque_by_fdi.obj' : 'custom_real_teeth.obj') + '&t=' + _t;
+  // toothMode 決定哪個牙齒模型檔案；mode 決定是否是菌斑模型
+  const resolvedToothMode = toothMode ?? _currentToothMode;
+  const baseGlb = resolvedToothMode === 'teaching'
+    ? 'custom_real_teeth_teaching.glb'
+    : 'custom_real_teeth.glb';
+  const baseObj = resolvedToothMode === 'teaching'
+    ? 'custom_real_teeth_teaching.obj'
+    : 'custom_real_teeth.obj';
+  const plaqueGlb = window._plaqueGlbName || 'plaque_by_fdi.glb';
+  const plaqueObj = plaqueGlb.replace('.glb', '.obj');
+  const glbUrl = getFileUrl(mode === 'plaque' ? plaqueGlb : baseGlb) + '&t=' + _t;
+  const objUrl = getFileUrl(mode === 'plaque' ? plaqueObj : baseObj) + '&t=' + _t;
 
   // Hide timeline when switching away from plaque mode
   if (mode !== 'plaque') hidePlaqueTimeline();

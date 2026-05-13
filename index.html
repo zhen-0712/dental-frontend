@@ -119,6 +119,12 @@
         <p class="upload-mode-hint" id="init-upload-mode-hint">每個角度上傳一張照片</p>
       </div>
 
+      <!-- 牙齒類型切換：假牙模型 / 正常牙齒 -->
+      <div class="tooth-mode-toggle" id="tooth-mode-toggle">
+        <button class="toggle-btn active" id="toggle-normal"   onclick="switchToothMode('normal')">正常牙齒</button>
+        <button class="toggle-btn"         id="toggle-teaching" onclick="switchToothMode('teaching')">假牙模型</button>
+      </div>
+
       <div class="upload-grid">
         <div class="upload-card"><div class="upload-zone" id="init-zone-front">
           <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
@@ -183,6 +189,12 @@
         <p class="section-desc">上傳塗抹染色劑後拍攝的五角度照片，系統將菌斑標示在你的個人化 3D 模型上。</p>
       </div>
 
+
+      <!-- 菌斑分析牙齒類型切換 -->
+      <div class="tooth-mode-toggle" id="plaque-tooth-mode-toggle">
+        <button class="toggle-btn active" id="plaque-toggle-normal"   onclick="window.setPlaqueToothMode('normal')">正常牙齒</button>
+        <button class="toggle-btn"        id="plaque-toggle-teaching" onclick="window.setPlaqueToothMode('teaching')">假牙模型</button>
+      </div>
 
       <div class="upload-grid">
         <div class="upload-card"><div class="upload-zone" id="plaque-zone-front">
