@@ -99,6 +99,7 @@
 .upload-zone:hover { border-color: var(--jade); background: rgba(3,105,94,0.04); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .upload-zone.has-file { border-style: solid; border-color: var(--jade-light); }
 .upload-icon { width: 2.25rem; height: 2.25rem; color: var(--aqua-light); }
+.guide-icon  { width: 3.6rem;  height: 3.6rem; }
 .upload-label { font-size: 1rem; font-weight: 500; color: var(--ink-soft); }
 .upload-hint { font-size: 0.875rem; color: var(--muted); }
 .file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }

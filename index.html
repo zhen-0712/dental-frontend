@@ -127,32 +127,77 @@
 
       <div class="upload-grid">
         <div class="upload-card"><div class="upload-zone" id="init-zone-front">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">正面</p><p class="upload-hint">front.jpg</p>
+          <!-- 正面：兩排牙齒對視 -->
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="28" cy="25" rx="21" ry="17" fill="#fde8ed"/>
+            <path d="M10,21 C16,11 22,17 28,14 C34,17 40,11 46,21 C40,23 34,22 28,22 C22,22 16,23 10,21Z" fill="#f0a0b0"/>
+            <path d="M11,33 C18,30 38,30 45,33 C43,41 36,45 28,45 C20,45 13,41 11,33Z" fill="#e89098"/>
+            <rect x="12" y="20" width="32" height="6.5" rx="2" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="17.3" y1="20.5" x2="17.3" y2="26" stroke="#ece4e6" stroke-width="0.8"/><line x1="22.7" y1="20.5" x2="22.7" y2="26" stroke="#ece4e6" stroke-width="0.8"/><line x1="28" y1="20.5" x2="28" y2="26" stroke="#ece4e6" stroke-width="0.8"/><line x1="33.3" y1="20.5" x2="33.3" y2="26" stroke="#ece4e6" stroke-width="0.8"/><line x1="38.7" y1="20.5" x2="38.7" y2="26" stroke="#ece4e6" stroke-width="0.8"/>
+            <rect x="12" y="26.5" width="32" height="6.5" rx="2" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="17.3" y1="27" x2="17.3" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/><line x1="22.7" y1="27" x2="22.7" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/><line x1="28" y1="27" x2="28" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/><line x1="33.3" y1="27" x2="33.3" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/><line x1="38.7" y1="27" x2="38.7" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/>
+          </svg>
+          <p class="upload-label">正面</p><p class="upload-hint">張嘴，牙齒對齊鏡頭</p>
           <input type="file" accept="image/*" class="file-input" id="init-input-front">
         </div><div class="upload-preview" id="init-preview-front"></div></div>
 
         <div class="upload-card"><div class="upload-zone" id="init-zone-left_side">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">左側面</p><p class="upload-hint">left_side.jpg</p>
+          <!-- 左側面：側臉向右，嘴角左側 -->
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22,4 Q10,4 8,24 Q10,44 22,44 Q36,44 46,36 L46,12 Q36,4 22,4Z" fill="#fde8ed"/>
+            <path d="M8,22 Q14,16 20,19 L8,22Z" fill="#f0a0b0"/>
+            <path d="M8,27 Q14,33 20,30 L8,27Z" fill="#e89098"/>
+            <rect x="14" y="18" width="30" height="5.5" rx="1.5" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="20" y1="18.5" x2="20" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="26" y1="18.5" x2="26" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="32" y1="18.5" x2="32" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="38" y1="18.5" x2="38" y2="23" stroke="#ece4e6" stroke-width="0.8"/>
+            <rect x="14" y="25" width="30" height="5.5" rx="1.5" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="20" y1="25.5" x2="20" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="26" y1="25.5" x2="26" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="32" y1="25.5" x2="32" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="38" y1="25.5" x2="38" y2="30" stroke="#ece4e6" stroke-width="0.8"/>
+            <circle cx="8" cy="24" r="4" fill="#f0a0b0" opacity="0.75"/>
+          </svg>
+          <p class="upload-label">左側面</p><p class="upload-hint">手指拉開左嘴角拍側面</p>
           <input type="file" accept="image/*" class="file-input" id="init-input-left_side">
         </div><div class="upload-preview" id="init-preview-left_side"></div></div>
 
         <div class="upload-card"><div class="upload-zone" id="init-zone-right_side">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">右側面</p><p class="upload-hint">right_side.jpg</p>
+          <!-- 右側面：側臉向左，嘴角右側 -->
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M34,4 Q46,4 48,24 Q46,44 34,44 Q20,44 10,36 L10,12 Q20,4 34,4Z" fill="#fde8ed"/>
+            <path d="M48,22 Q42,16 36,19 L48,22Z" fill="#f0a0b0"/>
+            <path d="M48,27 Q42,33 36,30 L48,27Z" fill="#e89098"/>
+            <rect x="12" y="18" width="30" height="5.5" rx="1.5" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="18" y1="18.5" x2="18" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="24" y1="18.5" x2="24" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="30" y1="18.5" x2="30" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="36" y1="18.5" x2="36" y2="23" stroke="#ece4e6" stroke-width="0.8"/>
+            <rect x="12" y="25" width="30" height="5.5" rx="1.5" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="18" y1="25.5" x2="18" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="24" y1="25.5" x2="24" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="30" y1="25.5" x2="30" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="36" y1="25.5" x2="36" y2="30" stroke="#ece4e6" stroke-width="0.8"/>
+            <circle cx="48" cy="24" r="4" fill="#f0a0b0" opacity="0.75"/>
+          </svg>
+          <p class="upload-label">右側面</p><p class="upload-hint">手指拉開右嘴角拍側面</p>
           <input type="file" accept="image/*" class="file-input" id="init-input-right_side">
         </div><div class="upload-preview" id="init-preview-right_side"></div></div>
 
         <div class="upload-card"><div class="upload-zone" id="init-zone-upper_occlusal">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">上顎咬合面</p><p class="upload-hint">upper_occlusal.jpg</p>
+          <!-- 上顎咬合面：U形牙弓朝上 + 上顎 -->
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="28" cy="26" rx="22" ry="19" fill="#fde8ed"/>
+            <path d="M12,43 Q12,10 28,8 Q44,10 44,43" stroke="#f0a0b0" stroke-width="11" fill="none" stroke-linecap="round"/>
+            <path d="M12,43 Q12,10 28,8 Q44,10 44,43" stroke="white" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <ellipse cx="28" cy="29" rx="12" ry="10" fill="#fce0e8"/>
+            <path d="M22,23 Q28,21 34,23" stroke="#f0c0cc" stroke-width="1" fill="none" stroke-linecap="round"/>
+            <path d="M20,27 Q28,25 36,27" stroke="#f0c0cc" stroke-width="1" fill="none" stroke-linecap="round"/>
+            <path d="M20,31 Q28,29 36,31" stroke="#f0c0cc" stroke-width="1" fill="none" stroke-linecap="round"/>
+          </svg>
+          <p class="upload-label">上顎咬合面</p><p class="upload-hint">仰頭張嘴，相機朝上拍</p>
           <input type="file" accept="image/*" class="file-input" id="init-input-upper_occlusal">
         </div><div class="upload-preview" id="init-preview-upper_occlusal"></div></div>
 
         <div class="upload-card"><div class="upload-zone" id="init-zone-lower_occlusal">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">下顎咬合面</p><p class="upload-hint">lower_occlusal.jpg</p>
+          <!-- 下顎咬合面：U形牙弓 + 舌頭 -->
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="28" cy="26" rx="22" ry="19" fill="#fde8ed"/>
+            <path d="M12,43 Q12,12 28,10 Q44,12 44,43" stroke="#f0a0b0" stroke-width="11" fill="none" stroke-linecap="round"/>
+            <path d="M12,43 Q12,12 28,10 Q44,12 44,43" stroke="white" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <ellipse cx="28" cy="26" rx="11" ry="9" fill="#e07090"/>
+            <line x1="28" y1="18" x2="28" y2="34" stroke="#c85070" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <p class="upload-label">下顎咬合面</p><p class="upload-hint">低頭張嘴，相機朝下拍</p>
           <input type="file" accept="image/*" class="file-input" id="init-input-lower_occlusal">
         </div><div class="upload-preview" id="init-preview-lower_occlusal"></div></div>
       </div>
@@ -198,32 +243,72 @@
 
       <div class="upload-grid">
         <div class="upload-card"><div class="upload-zone" id="plaque-zone-front">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">正面</p><p class="upload-hint">front.jpg</p>
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="28" cy="25" rx="21" ry="17" fill="#fde8ed"/>
+            <path d="M10,21 C16,11 22,17 28,14 C34,17 40,11 46,21 C40,23 34,22 28,22 C22,22 16,23 10,21Z" fill="#f0a0b0"/>
+            <path d="M11,33 C18,30 38,30 45,33 C43,41 36,45 28,45 C20,45 13,41 11,33Z" fill="#e89098"/>
+            <rect x="12" y="20" width="32" height="6.5" rx="2" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="17.3" y1="20.5" x2="17.3" y2="26" stroke="#ece4e6" stroke-width="0.8"/><line x1="22.7" y1="20.5" x2="22.7" y2="26" stroke="#ece4e6" stroke-width="0.8"/><line x1="28" y1="20.5" x2="28" y2="26" stroke="#ece4e6" stroke-width="0.8"/><line x1="33.3" y1="20.5" x2="33.3" y2="26" stroke="#ece4e6" stroke-width="0.8"/><line x1="38.7" y1="20.5" x2="38.7" y2="26" stroke="#ece4e6" stroke-width="0.8"/>
+            <rect x="12" y="26.5" width="32" height="6.5" rx="2" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="17.3" y1="27" x2="17.3" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/><line x1="22.7" y1="27" x2="22.7" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/><line x1="28" y1="27" x2="28" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/><line x1="33.3" y1="27" x2="33.3" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/><line x1="38.7" y1="27" x2="38.7" y2="32.5" stroke="#ece4e6" stroke-width="0.8"/>
+          </svg>
+          <p class="upload-label">正面</p><p class="upload-hint">張嘴，牙齒對齊鏡頭</p>
           <input type="file" accept="image/*" class="file-input" id="plaque-input-front">
         </div><div class="upload-preview" id="plaque-preview-front"></div></div>
 
         <div class="upload-card"><div class="upload-zone" id="plaque-zone-left_side">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">左側面</p><p class="upload-hint">left_side.jpg</p>
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22,4 Q10,4 8,24 Q10,44 22,44 Q36,44 46,36 L46,12 Q36,4 22,4Z" fill="#fde8ed"/>
+            <path d="M8,22 Q14,16 20,19 L8,22Z" fill="#f0a0b0"/>
+            <path d="M8,27 Q14,33 20,30 L8,27Z" fill="#e89098"/>
+            <rect x="14" y="18" width="30" height="5.5" rx="1.5" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="20" y1="18.5" x2="20" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="26" y1="18.5" x2="26" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="32" y1="18.5" x2="32" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="38" y1="18.5" x2="38" y2="23" stroke="#ece4e6" stroke-width="0.8"/>
+            <rect x="14" y="25" width="30" height="5.5" rx="1.5" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="20" y1="25.5" x2="20" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="26" y1="25.5" x2="26" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="32" y1="25.5" x2="32" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="38" y1="25.5" x2="38" y2="30" stroke="#ece4e6" stroke-width="0.8"/>
+            <circle cx="8" cy="24" r="4" fill="#f0a0b0" opacity="0.75"/>
+          </svg>
+          <p class="upload-label">左側面</p><p class="upload-hint">手指拉開左嘴角拍側面</p>
           <input type="file" accept="image/*" class="file-input" id="plaque-input-left_side">
         </div><div class="upload-preview" id="plaque-preview-left_side"></div></div>
 
         <div class="upload-card"><div class="upload-zone" id="plaque-zone-right_side">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">右側面</p><p class="upload-hint">right_side.jpg</p>
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M34,4 Q46,4 48,24 Q46,44 34,44 Q20,44 10,36 L10,12 Q20,4 34,4Z" fill="#fde8ed"/>
+            <path d="M48,22 Q42,16 36,19 L48,22Z" fill="#f0a0b0"/>
+            <path d="M48,27 Q42,33 36,30 L48,27Z" fill="#e89098"/>
+            <rect x="12" y="18" width="30" height="5.5" rx="1.5" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="18" y1="18.5" x2="18" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="24" y1="18.5" x2="24" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="30" y1="18.5" x2="30" y2="23" stroke="#ece4e6" stroke-width="0.8"/><line x1="36" y1="18.5" x2="36" y2="23" stroke="#ece4e6" stroke-width="0.8"/>
+            <rect x="12" y="25" width="30" height="5.5" rx="1.5" fill="white" stroke="#e0d8da" stroke-width="0.5"/>
+            <line x1="18" y1="25.5" x2="18" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="24" y1="25.5" x2="24" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="30" y1="25.5" x2="30" y2="30" stroke="#ece4e6" stroke-width="0.8"/><line x1="36" y1="25.5" x2="36" y2="30" stroke="#ece4e6" stroke-width="0.8"/>
+            <circle cx="48" cy="24" r="4" fill="#f0a0b0" opacity="0.75"/>
+          </svg>
+          <p class="upload-label">右側面</p><p class="upload-hint">手指拉開右嘴角拍側面</p>
           <input type="file" accept="image/*" class="file-input" id="plaque-input-right_side">
         </div><div class="upload-preview" id="plaque-preview-right_side"></div></div>
 
         <div class="upload-card"><div class="upload-zone" id="plaque-zone-upper_occlusal">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">上顎咬合面</p><p class="upload-hint">upper_occlusal.jpg</p>
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="28" cy="26" rx="22" ry="19" fill="#fde8ed"/>
+            <path d="M12,43 Q12,10 28,8 Q44,10 44,43" stroke="#f0a0b0" stroke-width="11" fill="none" stroke-linecap="round"/>
+            <path d="M12,43 Q12,10 28,8 Q44,10 44,43" stroke="white" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <ellipse cx="28" cy="29" rx="12" ry="10" fill="#fce0e8"/>
+            <path d="M22,23 Q28,21 34,23" stroke="#f0c0cc" stroke-width="1" fill="none" stroke-linecap="round"/>
+            <path d="M20,27 Q28,25 36,27" stroke="#f0c0cc" stroke-width="1" fill="none" stroke-linecap="round"/>
+            <path d="M20,31 Q28,29 36,31" stroke="#f0c0cc" stroke-width="1" fill="none" stroke-linecap="round"/>
+          </svg>
+          <p class="upload-label">上顎咬合面</p><p class="upload-hint">仰頭張嘴，相機朝上拍</p>
           <input type="file" accept="image/*" class="file-input" id="plaque-input-upper_occlusal">
         </div><div class="upload-preview" id="plaque-preview-upper_occlusal"></div></div>
 
         <div class="upload-card"><div class="upload-zone" id="plaque-zone-lower_occlusal">
-          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-          <p class="upload-label">下顎咬合面</p><p class="upload-hint">lower_occlusal.jpg</p>
+          <svg class="guide-icon" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="28" cy="26" rx="22" ry="19" fill="#fde8ed"/>
+            <path d="M12,43 Q12,12 28,10 Q44,12 44,43" stroke="#f0a0b0" stroke-width="11" fill="none" stroke-linecap="round"/>
+            <path d="M12,43 Q12,12 28,10 Q44,12 44,43" stroke="white" stroke-width="7" fill="none" stroke-linecap="round"/>
+            <ellipse cx="28" cy="26" rx="11" ry="9" fill="#e07090"/>
+            <line x1="28" y1="18" x2="28" y2="34" stroke="#c85070" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <p class="upload-label">下顎咬合面</p><p class="upload-hint">低頭張嘴，相機朝下拍</p>
           <input type="file" accept="image/*" class="file-input" id="plaque-input-lower_occlusal">
         </div><div class="upload-preview" id="plaque-preview-lower_occlusal"></div></div>
       </div>
