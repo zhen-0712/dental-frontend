@@ -144,8 +144,32 @@ export function setupPhotoCheck(prefix, view, zoneEl) {
     badge.className = 'photo-check-badge checking';
     badge.innerHTML = '<span class="pcb-spinner"></span> 檢查中…';
 
+    // Layer 1：前端品質檢查（模糊、亮度）
     const result   = await analyzePhoto(file, view);
     const feedback = buildFeedback(result, view);
+
+    if (!feedback.ok) {
+      renderCheckBadge(view, feedback, zoneEl);
+      return;
+    }
+
+    // Layer 2：後端視角分類（CLIP）
+    badge.innerHTML = '<span class="pcb-spinner"></span> 確認視角…';
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('view', view);
+      const resp = await fetch('/validate_angle', { method: 'POST', body: fd });
+      if (resp.ok) {
+        const angleResult = await resp.json();
+        if (!angleResult.ok) {
+          feedback.ok     = false;
+          feedback.issues = [angleResult.message];
+          feedback.tips   = ['請確認照片上傳到正確的視角位置'];
+        }
+      }
+    } catch (_) { /* 伺服器暫時無法連線時靜默跳過，不阻擋使用者 */ }
+
     renderCheckBadge(view, feedback, zoneEl);
   });
 }
