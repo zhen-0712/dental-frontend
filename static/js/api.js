@@ -83,8 +83,8 @@ export async function submitPlaque(filesObj, mirror = false, teaching = false) {
   Object.entries(filesObj).forEach(([view, file]) =>
     formData.append(view, file, `${view}.jpg`)
   );
-  formData.append('mirror',   mirror   ? '1' : '0');
-  formData.append('teaching', teaching ? '1' : '0');
+  formData.append('mirror',      mirror   ? '1' : '0');
+  formData.append('model_type',  teaching ? 'teaching' : 'regular');
   const res = await fetch(`${API_BASE}/plaque`, {
     method: 'POST', body: formData, headers: authHeaders()
   });
