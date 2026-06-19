@@ -64,7 +64,7 @@ function renderLeftPanel(toothData, plaqueStats, state, plaqueRegions) {
     // 假牙模式：菌斑圖表只套用假牙缺牙清單，不與 SAT 結果聯集
     const plaqueDisplayData = _isPlaqueTeaching() ? _makeTeachingOverride(toothData) : toothData;
     renderPlaqueToothChart(summary, plaqueDisplayData);
-
+    renderToothAdvice(summary);
     renderPlaqueAccuracy(plaqueStats, plaqueRegions);
   }
 
@@ -164,6 +164,68 @@ function renderToothAccuracy(toothData) {
         ${viewRows}
       </div>
       <p class="acc-note">偵測覆蓋 × 35% ＋ 平均可信度 × 40% ＋ 多視角驗證 × 25%</p>
+    </div>
+  `;
+}
+
+// ===== 定點刷牙建議 =====
+const _TOOTH_ADVICE_MAP = [
+  { fdis: [11,12,13,21,22,23], zone: '上前牙',   tips: ['以 45° 角對準牙齦刷牙', '使用牙線清潔牙縫', '注意舌側面積菌'] },
+  { fdis: [14,15,24,25],       zone: '上前磨牙', tips: ['仔細刷咬合面凹溝', '以牙間刷清潔鄰接面'] },
+  { fdis: [16,17,18,26,27,28], zone: '上後磨牙', tips: ['張大嘴確保刷頭抵達', '建議使用電動牙刷', '以牙間刷深入後牙縫'] },
+  { fdis: [31,32,33,41,42,43], zone: '下前牙',   tips: ['以垂直方式刷舌側面', '舌側易積菌斑，重點清潔', '使用牙線清潔牙縫'] },
+  { fdis: [34,35,44,45],       zone: '下前磨牙', tips: ['仔細刷咬合面凹溝', '以牙間刷清潔鄰接面'] },
+  { fdis: [36,37,38,46,47,48], zone: '下後磨牙', tips: ['最難清潔的區域', '建議電動牙刷加強清潔', '以牙間刷清潔後牙縫'] },
+];
+
+function renderToothAdvice(summary) {
+  const el = document.getElementById('tooth-advice-wrap');
+  if (!el) return;
+
+  const ranked = [];
+  for (const group of _TOOTH_ADVICE_MAP) {
+    const affected = group.fdis.filter(fdi => {
+      const v = summary[fdi] ?? summary[String(fdi)];
+      return v && (v.hit_verts ?? 0) > 0;
+    });
+    if (!affected.length) continue;
+    const maxPx = Math.max(...affected.map(fdi => (summary[fdi] ?? summary[String(fdi)])?.total_plaque_px || 0));
+    ranked.push({ zone: group.zone, fdis: affected, tips: group.tips, maxPx });
+  }
+  ranked.sort((a, b) => b.maxPx - a.maxPx);
+  const top = ranked.slice(0, 3);
+
+  if (!top.length) { el.innerHTML = ''; return; }
+
+  const rankColors = ['#c0392b', '#e8a020', '#239dca'];
+  const items = top.map((item, idx) => `
+    <div class="advice-item${idx < top.length - 1 ? ' advice-item-border' : ''}">
+      <div class="advice-item-header">
+        <span class="advice-rank" style="background:${rankColors[idx]}">${idx + 1}</span>
+        <span class="advice-zone">${item.zone}</span>
+        <div class="advice-fdi-chips">
+          ${item.fdis.slice(0, 5).map(f => `<span class="advice-fdi-chip">${f}</span>`).join('')}
+          ${item.fdis.length > 5 ? `<span class="advice-fdi-more">+${item.fdis.length - 5}</span>` : ''}
+        </div>
+      </div>
+      <ul class="advice-tips">
+        ${item.tips.map(t => `<li>${t}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+
+  el.innerHTML = `
+    <div class="tooth-advice-card">
+      <div class="tooth-advice-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#239dca" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span class="tooth-advice-title">刷牙建議</span>
+      </div>
+      <p class="tooth-advice-sub">根據菌斑分析，重點清潔以下區域：</p>
+      ${items}
     </div>
   `;
 }
