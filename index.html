@@ -235,6 +235,13 @@
       </div>
 
 
+      <!-- 菌斑偵測光源模式切換 -->
+      <div class="tooth-mode-toggle" id="plaque-light-mode-toggle">
+        <button class="toggle-btn active" id="plaque-light-dye"   onclick="window.setPlaqueLightMode('dye')">染色劑</button>
+        <button class="toggle-btn"        id="plaque-light-fluor" onclick="window.setPlaqueLightMode('fluorescence')">紫光燈</button>
+      </div>
+      <p class="camera-mode-hint" id="plaque-light-hint">染色劑模式：請先塗抹牙菌斑顯示劑再拍攝。</p>
+
       <!-- 菌斑分析牙齒類型切換 -->
       <div class="tooth-mode-toggle" id="plaque-tooth-mode-toggle">
         <button class="toggle-btn active" id="plaque-toggle-normal"   onclick="window.setPlaqueToothMode('normal')">正常牙齒</button>

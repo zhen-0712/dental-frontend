@@ -78,13 +78,16 @@ export async function submitInit(filesObj, mirror = false) {
   return res.json();
 }
 
-export async function submitPlaque(filesObj, mirror = false, teaching = false) {
+export async function submitPlaque(filesObj, mirror = false, teaching = false,
+                                   lightMode = 'dye') {
   const formData = new FormData();
   Object.entries(filesObj).forEach(([view, file]) =>
     formData.append(view, file, `${view}.jpg`)
   );
   formData.append('mirror',      mirror   ? '1' : '0');
   formData.append('model_type',  teaching ? 'teaching' : 'regular');
+  // 'dye' = 染色劑（原有流程）、'fluorescence' = 紫光燈 405nm 螢光
+  formData.append('light_mode',  lightMode === 'fluorescence' ? 'fluorescence' : 'dye');
   const res = await fetch(`${API_BASE}/plaque`, {
     method: 'POST', body: formData, headers: authHeaders()
   });

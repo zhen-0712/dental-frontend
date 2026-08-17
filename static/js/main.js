@@ -31,6 +31,7 @@ const state = {
   mirrorPlaque:      false,
   initUploadMode:    'single',   // 'single' | 'multi'
   plaqueTeachingMode: 'normal',  // 'normal' | 'teaching'
+  plaqueLightMode:   'dye',      // 'dye'（染色劑）| 'fluorescence'（紫光燈）
 };
 
 // ===== 暴露全域供 HTML onclick =====
@@ -81,6 +82,18 @@ window.setPlaqueToothMode = function(mode) {
   state.plaqueTeachingMode = mode;
   document.getElementById('plaque-toggle-normal')?.classList.toggle('active', mode === 'normal');
   document.getElementById('plaque-toggle-teaching')?.classList.toggle('active', mode === 'teaching');
+};
+
+window.setPlaqueLightMode = function(mode) {
+  state.plaqueLightMode = mode;
+  document.getElementById('plaque-light-dye')?.classList.toggle('active', mode === 'dye');
+  document.getElementById('plaque-light-fluor')?.classList.toggle('active', mode === 'fluorescence');
+  const hint = document.getElementById('plaque-light-hint');
+  if (hint) {
+    hint.textContent = mode === 'fluorescence'
+      ? '紫光燈模式：請在 405nm 藍紫光下拍攝，菌斑會呈現粉紅色螢光，不需塗抹染色劑。'
+      : '染色劑模式：請先塗抹牙菌斑顯示劑再拍攝。';
+  }
 };
 
 window.setMirrorPlaque = function(val) {
@@ -177,7 +190,8 @@ async function startPlaque() {
   showProgress('plaque');
   try {
     const teaching = state.plaqueTeachingMode === 'teaching';
-    const data = await submitPlaque(plaqueFiles, state.mirrorPlaque, teaching);
+    const data = await submitPlaque(plaqueFiles, state.mirrorPlaque, teaching,
+                                    state.plaqueLightMode);
     if (!data?.task_id) { showError(data?.detail || '提交失敗，請重試'); return; }
     state.taskId = data.task_id;
     poll();
