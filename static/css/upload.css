@@ -209,3 +209,98 @@
   border-radius: calc(var(--radius-md) - 2px);
   pointer-events: none;
 }
+
+/* ===== 鏡像說明小提示（滑鼠移入顯示的半透明浮層） ===== */
+.mirror-help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.mirror-help-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(3,105,94,0.14);
+  color: var(--jade);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  opacity: 0.7;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+}
+
+.mirror-help-btn:hover,
+.mirror-help-btn:focus-visible {
+  opacity: 1;
+  background: var(--jade);
+  color: var(--white);
+  outline: none;
+}
+
+.mirror-tip {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-3px);
+  z-index: 40;
+  width: max-content;
+  max-width: min(250px, 72vw);
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: rgba(26,36,32,0.88);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  color: rgba(231,233,216,0.92);
+  font-size: 0.66rem;
+  line-height: 1.5;
+  text-align: left;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.16s, transform 0.16s, visibility 0.16s;
+}
+
+.mirror-tip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: rgba(26,36,32,0.88);
+}
+
+.mirror-help:hover .mirror-tip,
+.mirror-help:focus-within .mirror-tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.mirror-tip b {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: rgba(255,255,255,0.95);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.mirror-tip i {
+  color: var(--aqua-light);
+  font-style: normal;
+}
+
+@media (max-width: 480px) {
+  .mirror-tip { left: 0; transform: translateX(0) translateY(-3px); }
+  .mirror-tip::before { left: 10px; }
+  .mirror-help:hover .mirror-tip,
+  .mirror-help:focus-within .mirror-tip { transform: translateX(0) translateY(0); }
+}

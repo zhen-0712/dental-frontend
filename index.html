@@ -8,18 +8,18 @@
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/css/base.css">
-<link rel="stylesheet" href="static/css/header.css">
-<link rel="stylesheet" href="static/css/buttons.css">
-<link rel="stylesheet" href="static/css/layout.css">
-<link rel="stylesheet" href="static/css/components.css">
-<link rel="stylesheet" href="static/css/upload.css">
-<link rel="stylesheet" href="static/css/progress.css">
-<link rel="stylesheet" href="static/css/result.css">
-<link rel="stylesheet" href="static/css/auth.css">
-<link rel="stylesheet" href="static/css/history.css">
-    <link rel="stylesheet" href="static/css/trend.css">
-<link rel="stylesheet" href="static/css/responsive.css">
+<link rel="stylesheet" href="static/css/base.css?v=20260817">
+<link rel="stylesheet" href="static/css/header.css?v=20260817">
+<link rel="stylesheet" href="static/css/buttons.css?v=20260817">
+<link rel="stylesheet" href="static/css/layout.css?v=20260817">
+<link rel="stylesheet" href="static/css/components.css?v=20260817">
+<link rel="stylesheet" href="static/css/upload.css?v=20260817">
+<link rel="stylesheet" href="static/css/progress.css?v=20260817">
+<link rel="stylesheet" href="static/css/result.css?v=20260817">
+<link rel="stylesheet" href="static/css/auth.css?v=20260817">
+<link rel="stylesheet" href="static/css/history.css?v=20260817">
+    <link rel="stylesheet" href="static/css/trend.css?v=20260817">
+<link rel="stylesheet" href="static/css/responsive.css?v=20260817">
 <script type="module" src="https://unpkg.com/@google/model-viewer@3.4.0/dist/model-viewer.min.js"></script>
 </head>
 <body>
@@ -214,6 +214,14 @@
           </button>
         </div>
         <p class="camera-mode-hint" id="init-camera-hint">前置相機，左右方向已正確</p>
+        <span class="mirror-help">
+          <button type="button" class="mirror-help-btn" aria-label="鏡像說明">?</button>
+          <span class="mirror-tip" role="tooltip">
+            <b>需注意手機是否有開鏡像</b>
+            自拍鏡頭多半會自動左右翻轉。<i>前置相機</i>＝有鏡像、<i>後置相機</i>＝無鏡像。若手機關過「鏡像自拍」，用前置鏡頭拍也要選後置相機。<br>
+            不確定就舉右手拍一張：手出現在畫面<i>右側</i>＝有鏡像。
+          </span>
+        </span>
       </div>
       <div class="submit-area">
         <button class="btn-primary btn-large" id="btn-init" disabled>
@@ -332,6 +340,14 @@
           </button>
         </div>
         <p class="camera-mode-hint" id="plaque-camera-hint">前置相機，左右方向已正確</p>
+        <span class="mirror-help">
+          <button type="button" class="mirror-help-btn" aria-label="鏡像說明">?</button>
+          <span class="mirror-tip" role="tooltip">
+            <b>需注意手機是否有開鏡像</b>
+            自拍鏡頭多半會自動左右翻轉。<i>前置相機</i>＝有鏡像、<i>後置相機</i>＝無鏡像。若手機關過「鏡像自拍」，用前置鏡頭拍也要選後置相機。<br>
+            不確定就舉右手拍一張：手出現在畫面<i>右側</i>＝有鏡像。
+          </span>
+        </span>
       </div>
       <div class="submit-area">
         <button class="btn-primary btn-large btn-plaque" id="btn-plaque" disabled>
